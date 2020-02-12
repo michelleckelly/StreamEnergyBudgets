@@ -1,0 +1,259 @@
+---
+title: "CAREER Project: Nutrient Regimes Analysis"
+author: "Michelle Catherine Kelly"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+-------
+
+# Potential ASLO-SFS special sessions for this project:
+
+## SS48 Data science for aquatic discovery and prediction: building a community of practice
+
+Data science combines mathematics and statistics, computer science, and domain expertise to enable prediction and insight for problems that are otherwise too computationally demanding or data-intensive to be analyzed with traditional tools - in other words, many current and inevitably future water resources issues. Although data science solutions are frequently applied to freshwater problems, these solutions may seldom be labeled "data science" due to a lack of a community supporting aquatic data science, limited formal training in data science for aquatic scientists, and few explicit examples of how data science is used in aquatic fields. This session seeks to make more commonplace the role of data science in aquatic fields by showcasing contributions that utilize data science tools to address issues ranging from large-scale aquatic biogeochemistry to within-system metagenomics across all aquatic systems. This includes, but is not restricted to, research that utilizes 1) information extracted from big data such as satellites, in-situ sensors, or genomic sequences, 2) statistical or data-driven analytical tools such as Bayesian inference, data assimilation, or deep learning, or 3) modeling techniques that are applied at regional to global-scales.
+
+## SS47 Open data in the era of global change: the role of networks in water resources sustainability science
+
+In the Anthropocene, the sustainability of freshwater resources are under threat due to both climate change and non-climate drivers, such as changes in land use and the introduction of invasive species. Long-term research and observatory networks, including the National Ecological Observatory Network (NEON), the US Long Term Ecological Research program (US LTER), and Global Lake Ecological Observatory Network (GLEON), have and will continue to play an important role in freshwater science by providing data streams necessary to differentiate between historical/natural variability and anthropogenic disturbance. Importantly, the field of ecology is in the midst of a data revolution with increased investment in infrastructure and coordination of large-scale programs to collect long-term data. This investment in data-gathering infrastructure has been accompanied by a community-wide push to publish open and FAIR (Findable, Accessible, Interoperable, and Reusable) data. The increasing availability of FAIR data has the potential to democratize ecology, and provide opportunities for a much more diverse pool of researchers to study global change, even when they might not have the resources to conduct large scale field campaigns themselves. We invite contributions that highlight novel perspectives for freshwater sustainability that have arisen from the synthesis of open and FAIR data from one or multiple ecological observatory, experimental, and/or collaborative networks. We especially encourage speakers to highlight how open data has provided unique opportunities to assess challenges to freshwater resource sustainability in the face of global change.
+
+## SS58 Big data ecology: leveraging large scale data sets to understand aquatic ecosystem structure and dynamics at macrosystem scales
+
+Aquatic ecosystems are experiencing substantial pressure in many regions from population growth, urbanization, changing land use, invasive species, and climate change, among other drivers. To address these challenges, researchers are increasingly using large volumes of compiled field, model, and remotely sensed data, including from programs such as the EPA National Aquatic Resource Surveys (NARS), the USGS National Water Quality Assessment (NAWQA), the National Ecological Observatory Network (NEON), the Lake multi-scaled geospatial and temporal database (LAGOS), and satellites such as Landsat and Sentinel series. Analysis of these large datasets enable characterization and attribution of environmental patterns, variability, and change at macrosystem scales. In this session, we invite contributions that improve understanding of spatial and temporal patterns and dynamics in aquatic ecosystems at regional to continental scales. We also encourage contributions that describe improvements in analytical techniques (e.g., algorithms or software packages) for generating insights into aquatic ecosystems at these broad scales. We seek to highlight novel applications and advancements in using these tools and data sets to understand aquatic ecosystems and to synthesize similarities and differences in lotic, lentic, wetland, and coastal ecosystem responses to climate, land use, hydrogeomorphic, and other key drivers.
+
+-------
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+# Load libraries
+library(tidyverse)
+library(lubridate)
+library(plotrix)
+library(gridExtra)
+library(ggmap)
+library(ggrepel)
+library(maps)
+library(wesanderson)
+```
+
+```{r load compiled StreamPULSE results, echo = FALSE, message = FALSE, warning = FALSE}
+# Load site attributes data
+sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
+
+# Create list of file names using site ID information
+fileRegEx <- unique(paste0("predictions_",
+                          sites$StreamPULSE_SiteID,".*rds"))
+
+# Pull paths of matching file names
+fileList <- lapply(fileRegEx, 
+                   function(x){list.files(path = "data/all_sp_model_objects",
+                                          pattern = x, full.names = T)})
+fileList <- unlist(fileList)
+
+# Load model results from files
+modelResults <- sapply(fileList, readRDS, simplify = F, USE.NAMES = T)
+
+# Create dummy function to calculate standard error
+se <- function(x){
+  sd(x, na.rm = T)/sqrt(length(na.omit(x)))
+}
+
+# Flatten list
+modelResults <- bind_rows(modelResults, .id = "site")
+
+# Compute averages by month
+modelResults_monthly <-
+  modelResults %>%
+  mutate(month = month(ymd(date)),
+         site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2]) %>%
+  group_by(site, month) %>%
+  summarise(GPP_se = se(GPP), 
+            GPP_mean = mean(GPP, na.rm = T),
+            ER_se = se(ER),
+            ER_mean = mean(ER, na.rm = T))
+
+# Compute averages by DOY
+modelResults_DOY <-
+  modelResults %>%
+  mutate(DOY = yday(date),
+         site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2]) %>%
+  group_by(site, DOY) %>%
+  summarise(GPP_se = se(GPP), 
+            GPP_mean = mean(GPP, na.rm = T),
+            ER_se = se(ER),
+            ER_mean = mean(ER, na.rm = T))
+```
+
+```{r pull raw StreamPULSE data for modeling, echo = FALSE, message = FALSE, warning = FALSE}
+```
+
+```{r plot_map, echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers and labels
+  geom_label_repel(data = sites, aes(x = Longitude, y = Latitude, 
+                                     label = SiteName), 
+                   box.padding = 1, size = 4, nudge_x = 0.01, 
+                   segment.size = 0.5, segment.color = "black", 
+                   label.size = 0.6) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
+             shape = 21, 
+             color = "black", size = 4, stroke = 1) +
+  coord_fixed(1.3, xlim = c(-30,-180), ylim = c(10, 75)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  scale_fill_manual(values=wes_palette(n=4, name="FantasticFox1")) +
+  guides(fill = FALSE)
+```
+
+**Figure 1.** Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)
+
+------
+
+```{r plot_DOY_Faceted, echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
+# Plot of DOY vs GPP or ER, faceted by site
+ggplot(data = modelResults_DOY, aes(x = DOY)) +
+  geom_line(aes(y = GPP_mean, color = site)) +
+  geom_line(aes(y = ER_mean, color = site)) +
+  facet_grid(~site) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  ylab("GPP or ER") +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "none") +
+  scale_color_brewer(palette = 2, type = "qual")
+```
+
+**Figure 2.** Average daily GPP and ER at each site for period of record. DOY = day of year. (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)
+
+------
+
+```{r plot_GPPvsER_Faceted, echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
+# Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
+ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
+  stat_density2d(aes(color = site)) +
+  facet_grid(~site) +
+  theme_classic() +
+  geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2, 
+               size = 0.3) +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "none") +
+  scale_color_brewer(palette = 2, type = "qual")
+```
+
+**Figure 3.** "Fingerprint" of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.
+
+------
+
+```{r plot_monthly, echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
+# Plot of month vs mean GPP or ER, all sites on one plot
+ggplot(data = modelResults_monthly, aes(x = month)) +
+  geom_line(aes(y = GPP_mean, color = site)) +
+  geom_point(aes(y = GPP_mean, color = site), 
+             shape = 21, fill = "white", size = 3) +
+  geom_line(aes(y = ER_mean, color = site)) +
+  geom_point(aes(y = ER_mean, color = site), 
+             shape = 21, fill = "white", size = 3) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  ylab("GPP or ER") +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black")) +
+  scale_color_brewer(palette = 2, type = "qual")
+```
+
+**Figure 4.** Mean monthly GPP and ER at each site for the period of record. Month represented by an integer value, where 1 = January. (This is super messy but a figure like this may be advantageous for comparing trends between the 25 sites. Could also consider coloring lines by denitrification or fixation rate, as a first try to visualize relationships)
+
+------
+
+```{r plot_GPPvsER, echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
+# 2D density plot of GPP vs ER, where density is displayed as a fingerprint
+ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
+  geom_density_2d(aes(color = site)) +
+  theme_classic() +
+  geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2) +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black")) +
+  scale_color_brewer(palette = 2, type = "qual")
+```
+
+**Figure 5.** "Fingerprint" of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.
+
+------
+
+```{r plot_map_drafts,  echo = FALSE, eval=FALSE}
+# Set center of the map 
+centerlat <- mean(sites$Latitude)
+centerlon <- mean(sites$Longitude)
+
+#get google api key
+#ggmap::register_google(key = "AIzaSyAVVvaP9SHUHaQMXAJ2SLRBiV9xi657VTo")
+
+# Get watercolormap
+watercolormap <- get_map(center = c(lon = -105, lat = 45), zoom =3, 
+                         source = "stamen", maptype = "watercolor", scale = 2, 
+                         color = "color")
+
+ggmap(watercolormap) +
+  geom_label_repel(data = sites, 
+                   aes(x = Longitude, y = Latitude, label = SiteName), 
+                   box.padding = 0.7, 
+                   #point.padding = 0.5, 
+                   #direction = "both", 
+                   nudge_y = 0.002,
+                   size = 3, nudge_x = 0.001,
+                   segment.color = "black") +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude), shape = 23, 
+             color = "black", fill = "white", size = 3) +
+  theme_nothing()
+
+# Black and white map
+tonermap <- get_map(center = c(lon = -105, lat = 45), zoom =3, 
+                         source = "stamen", maptype = "toner", scale = 2, 
+                         color = "color")
+
+ggmap(tonermap) +
+  geom_label_repel(data = sites, 
+                   aes(x = Longitude, y = Latitude, label = SiteName,
+                       fill = SiteName), 
+                   box.padding = 0.7, 
+                   #point.padding = 0.5, 
+                   #direction = "both", 
+                   nudge_y = 0.002,
+                   size = 3, nudge_x = 0.001) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = SiteName), 
+             shape = 23, color = "black", size = 3) +
+  theme_nothing()
+
+# satellite
+satellitemap <- get_map(center = c(lon = -100, lat = 52), zoom =3, 
+                         source = "google", maptype = "terrain", scale = 2, 
+                         color = "color")
+
+ggmap(satellitemap) +
+  geom_label_repel(data = sites, 
+                   aes(x = Longitude, y = Latitude, label = SiteName), 
+                   box.padding = 1, 
+                   #point.padding = 0.5, 
+                   #direction = "both", 
+                   #nudge_y = 0.002,
+                   size = 4, nudge_x = 0.01, segment.size = 0.5,
+                   segment.color = "black", label.size = 0.6) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude), shape = 21, 
+             color = "black", fill = "white", size = 4, stroke = 1) +
+  theme_nothing()
+```

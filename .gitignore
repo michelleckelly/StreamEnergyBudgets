@@ -1,0 +1,13 @@
+# Ignore history and RProject files
+*.Rhistory
+*.DS_Store
+/Data/.DS_Store
+*.Rproj
+
+# Ignore Rmd default cache directory
+/cache/
+
+# Ignore any temp files that are created by Rmd
+*.utf9.md
+*.knit.md
+*.tmp
