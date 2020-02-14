@@ -1,7 +1,7 @@
 name: "CAREER_NutrientRegimes"
 output_dir: "docs"
 navbar:
-  title: "Nutrient Regimes"
+  title: "Nutrient Regimes Analysis"
   left:
   - text: "Home"
    href: index.html
