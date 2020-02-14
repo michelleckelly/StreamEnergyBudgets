@@ -1,5 +1,5 @@
 # Defining Nutrient Regimes
-## Exploring stream energetics and element cycling with a nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism.
+> Exploring stream energetics and element cycling with a nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism.
 
 This repo houses the source code for the `CAREER Project: Defining Nutrient Regimes` analysis. 
 
