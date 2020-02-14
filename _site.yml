@@ -6,8 +6,8 @@ title: "Nutrient Analysis"
 navbar:
   right:
     - text: "Home"
-      href: CAREER_NutrientAnalysis.html
+      href: CAREER_MetabolismAnalysis.html
     - text: "About"
-      href: about.html
+      href: index.html
     - icon: fab fa-github
       href: https://github.com/rstudio/michelleckelly
