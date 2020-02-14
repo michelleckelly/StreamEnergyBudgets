@@ -15,5 +15,5 @@ navbar:
     - text: "About"
       href: index.html
     - icon: fab fa-github
-      href: https://github.com/rstudio/michelleckelly
+      href: https://github.com/michelleckelly
 output: distill::distill_article
