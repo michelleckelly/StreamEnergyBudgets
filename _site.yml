@@ -1,9 +1,13 @@
-name: "my-website"
+name: "CAREER_NutrientAnalysis"
 output_dir: "docs"
+include: ["import.R"]
+exclude: ["docs.txt", "*.csv"]
+title: "Nutrient Analysis"
 navbar:
-  title: "My Website"
-  left:
+  right:
     - text: "Home"
-      href: index.html
+      href: CAREER_NutrientAnalysis.html
     - text: "About"
       href: about.html
+    - icon: fab fa-github
+      href: https://github.com/rstudio/michelleckelly
