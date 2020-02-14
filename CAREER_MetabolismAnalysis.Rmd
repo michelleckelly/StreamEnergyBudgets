@@ -255,3 +255,13 @@ ggmap(satellitemap) +
              color = "black", fill = "white", size = 4, stroke = 1) +
   theme_nothing()
 ```
+
+## Acknowledgments {.appendix}
+
+This is a place to recognize people and institutions. It may also be a good place
+to acknowledge and cite software that makes your work possible.
+
+## Author Contributions {.appendix}
+
+We strongly encourage you to include an author contributions statement briefly 
+describing what each author did.

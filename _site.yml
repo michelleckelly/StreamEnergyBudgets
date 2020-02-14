@@ -4,7 +4,8 @@ include: ["import.R"]
 exclude: ["docs.txt", "*.csv"]
 title: "Nutrient Analysis"
 base_url: https://michelleckelly.github.io/CAREER_NutrientRegimes/
-repository_url: https://github.com/michelleckelly/CAREER_NutrientRegimes
+repository_url: https://github.com/michelleckelly/CAREER_NutrientRegimes/
+creative_commons: CC BY
 twitter:
   site: "@michelleckelly_"
 navbar:
