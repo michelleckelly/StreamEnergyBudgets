@@ -1,0 +1,28 @@
+﻿SiteName,State,Source,StreamPULSE_SiteID,Latitude,Longitude,MeanAnnualTemp_C,MeanAnnualPrecipitation_mm,DominantNLCDClasses,Elevation_m,WatershedSize_km2
+New Hope Creek,NC,StreamPULSE,NC_NHC,35.9795,-79.0018,,,,,
+Eno River,NC,StreamPULSE,NC_Eno,36.0715,-79.0968,,,,,
+Arikaree River,CO,NEON,CO_ARIK-up,39.75825,-102.4471,11,449,"Emergent Herbaceous Wetlands, Grassland/Herbaceous, Woody Wetlands",1213,2890
+Red Butte Creek,UT,NEON,UT_REDB-up,40.78374,-111.79765,9.5,713,Deciduous Forest,1742,18
+Black Earth Creek,WI,StreamPULSE,WI_BEC,43.1097,-89.6408,,,,,
+Brewery Creek,WI,StreamPULSE,WI_BRW,43.125,-89.635,,,,,
+Ichetucknee,FL,StreamPULSE,FL_ICHE2700,29.9526,-82.7863,,,,,
+Alexander,FL,Measured with USI,UNKNOWN,,,,,,,
+Pringle Creek,TX,NEON,TX_PRIN-up,33.37859,-97.78226,18,840,"Deciduous Forest, Grassland/Herbaceous",274,49.1
+McDiffett Creek,KS,NEON,KS_MCDI-up,38.94428,-96.44197,12,860,"Cultivated Crops, Grassland/Herbaceous",396,23.1
+Kings Creek,KS,NEON,KS_KING-up,39.10506,-96.60336,12,860,Deciduous Forest,366,13.2
+Hubbard Brook Forest,NH,StreamPULSE,NH_HBF,43.9549,-71.7225,,,,,
+Wednesday Hill Brook,NH,StreamPULSE,NH_WHB,43.1222,-71.0049,,,,,
+DHF,NH,StreamPULSE,UNKNOWN,,,,,,,
+Lower Hop Brook,MA,NEON,MA_HOPB-down,42.47179,-72.32963,8,967,"Evergreen Forest, Mixed Forest",260,12.8
+Rio Guilarte,PR,NEON,PR_GUIL-up,18.1741,-66.79851,25,1168,"Evergreen Forest, Grassland/Herbaceous",587,10.2
+Rio Cupeyes,PR,NEON,PR_CUPE-up,18.11352,-66.98676,25,1168,Evergreen Forest,257,4.86
+Quebrada Prieta,PR,StreamPULSE,PR_QP,18.324,-65.8151,,,,,
+Quebrada Sonadora,PR,StreamPULSE,PR_QS,18.3213,-65.8171,,,,,
+Sycamore Creek,AZ,NEON,AZ_SYCA-up,33.74906,-111.5069,21,350,Shrub/Shrub,727,273
+Wet Beaver,AZ,StreamPULSE,AZ_WB,34.6793,-111.695,,,,,
+Caribou Creek,AK,NEON,AK_CARI-up,65.15306,-147.50246,-1,399,Woody Wetlands,263,30.7
+Poker,AK,StreamPULSE,UNKNOWN,,,,,,,
+Blacktail Deer Creek,WY,NEON,WY_BLDE-up,44.95011,-110.58715,0.2,509,"Emergent Herbaceous Wetlands, Shrub/Shrub",2053,35
+McRae Creek,OR,NEON,OR_MCRA-up,44.2596,-122.16555,10,1750,Evergreen Forest,833,5.66
+Martha Creek,WA,NEON,WA_MART-up,45.79125,-121.93196,8,2530,Evergreen Forest,434,7.67
+Creston Creek,MO,BobHall,UNKNOWN,,,,,,,

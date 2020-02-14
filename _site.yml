@@ -1,12 +1,8 @@
-name: "CAREER_NutrientRegimes"
-output_dir: "docs"
+name: "my-website"
 navbar:
-  title: "Nutrient Regimes Analysis"
+  title: "My Website"
   left:
-  - text: "Home"
-   href: index.html
-  - text: "HTML"
-   href: CAREER_NutrientRegimes.html
-output:
-  html_document:
- theme: jekyll-theme-minimal
+    - text: "Home"
+      href: index.html
+    - text: "About"
+      href: about.html
