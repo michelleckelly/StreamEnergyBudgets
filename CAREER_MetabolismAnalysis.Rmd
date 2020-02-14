@@ -1,6 +1,19 @@
 ---
-title: "CAREER Project: Nutrient Regimes Analysis"
-author: "Michelle Catherine Kelly"
+title: "Defining Nutrient Regimes"
+description: Exploring energetics and element cycling with rates of nitrogen fixation, denitrification, and ecosystem metabolism on a nationwide scale
+author: 
+  - name: "Michelle Catherine Kelly"
+    url: https://michelleckelly.github.io
+    affiliation: Department of Biological Sciences and Data Science Program, Michigan Technological University
+  - name: "Kevin Nevorski"
+    url: https://twitter.com/KNevorski?s=20
+    affiliation: Department of Biological Sciences, Michigan Technological University
+  - name: "Erin K. Eberhard"
+    url: https://twitter.com/Erin_K_Eberhard?s=20
+    affiliation: Department of Biological Sciences, Michigan Technological University
+  - name: "Amy M. Marcarelli"
+    url: http://marcarelli-lab.bio.mtu.edu/
+    affiliation: Department of Biological Sciences, Michigan Technological University
 date: "`r format(Sys.Date())`"
 ---
 
