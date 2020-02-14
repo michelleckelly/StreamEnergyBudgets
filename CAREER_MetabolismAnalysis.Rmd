@@ -145,6 +145,8 @@ ggplot(data = modelResults_DOY, aes(x = DOY)) +
 # Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
 ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   stat_density2d(aes(color = site)) +
+  labs(x = expression("GPP (g"~O[2]~m^2~"d"^{-1}*")"),
+       y = expression("ER (g"~O[2]~m^2~"d"^{-1}*")")) +
   facet_grid(~site) +
   theme_classic() +
   geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2, 
@@ -153,7 +155,13 @@ ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
         panel.background = element_rect(color = "black"),
         legend.position = "none") +
   scale_color_brewer(palette = 2, type = "qual")
+
+
+
+
+
 ```
+
 
 **Figure 3.** "Fingerprint" of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.
 
