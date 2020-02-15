@@ -86,7 +86,7 @@ modelResults_DOY <-
 ```{r pull raw StreamPULSE data for modeling, echo = FALSE, message = FALSE, warning = FALSE}
 ```
 
-```{r plot_map, echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+```{r plot_map, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 # Pull state map data
 world.map <- map_data("world")
 states.map <- map_data("state")
@@ -118,11 +118,8 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-**Figure 1.** Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)
 
-------
-
-```{r plot_DOY_Faceted, echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
+```{r plot_DOY_Faceted, fig.cap="Average daily GPP and ER at each site for period of record. DOY = day of year. (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
 # Plot of DOY vs GPP or ER, faceted by site
 ggplot(data = modelResults_DOY, aes(x = DOY)) +
   geom_line(aes(y = GPP_mean, color = site)) +
@@ -137,11 +134,8 @@ ggplot(data = modelResults_DOY, aes(x = DOY)) +
   scale_color_brewer(palette = 2, type = "qual")
 ```
 
-**Figure 2.** Average daily GPP and ER at each site for period of record. DOY = day of year. (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)
 
-------
-
-```{r plot_GPPvsER_Faceted, echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
+```{r plot_GPPvsER_Faceted, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
 # Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
 ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   stat_density2d(aes(color = site)) +
@@ -155,19 +149,10 @@ ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
         panel.background = element_rect(color = "black"),
         legend.position = "none") +
   scale_color_brewer(palette = 2, type = "qual")
-
-
-
-
-
 ```
 
 
-**Figure 3.** "Fingerprint" of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.
-
-------
-
-```{r plot_monthly, echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
+```{r plot_monthly, fig.cap="Mean monthly GPP and ER at each site for the period of record. Month represented by an integer value, where 1 = January. (This is super messy but a figure like this may be advantageous for comparing trends between the 25 sites. Could also consider coloring lines by denitrification or fixation rate, as a first try to visualize relationships)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
 # Plot of month vs mean GPP or ER, all sites on one plot
 ggplot(data = modelResults_monthly, aes(x = month)) +
   geom_line(aes(y = GPP_mean, color = site)) +
@@ -184,11 +169,7 @@ ggplot(data = modelResults_monthly, aes(x = month)) +
   scale_color_brewer(palette = 2, type = "qual")
 ```
 
-**Figure 4.** Mean monthly GPP and ER at each site for the period of record. Month represented by an integer value, where 1 = January. (This is super messy but a figure like this may be advantageous for comparing trends between the 25 sites. Could also consider coloring lines by denitrification or fixation rate, as a first try to visualize relationships)
-
-------
-
-```{r plot_GPPvsER, echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
+```{r plot_GPPvsER, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
 # 2D density plot of GPP vs ER, where density is displayed as a fingerprint
 ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   geom_density_2d(aes(color = site)) +
@@ -199,9 +180,6 @@ ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   scale_color_brewer(palette = 2, type = "qual")
 ```
 
-**Figure 5.** "Fingerprint" of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.
-
-------
 
 ```{r plot_map_drafts,  echo = FALSE, eval=FALSE}
 # Set center of the map 
