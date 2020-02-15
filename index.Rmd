@@ -15,6 +15,9 @@ author:
     url: http://marcarelli-lab.bio.mtu.edu/
     affiliation: Michigan Tech
 date: "`r format(Sys.Date())`"
+output:
+  distill::distill_article:
+    self_contained: false
 ---
 
 Hello, Website!
