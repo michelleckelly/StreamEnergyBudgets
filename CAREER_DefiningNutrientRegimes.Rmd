@@ -137,10 +137,15 @@ modelResults_DOY <-
 ############## Load nutrient process rates data ############## 
 Nprocess <- read_csv(file = "data/CAREER_RatesTable.csv")
 # Unite site code row with Nprocess table
-Nprocess <- left_join(Nprocess, sites[c(1,4)], by = "SiteName")
+#Nprocess <- left_join(Nprocess, sites[c(1,4)], by = "SiteName") # This isn't being matched correctly
 Nprocess$date <- mdy(Nprocess$date)
+
+# Filter to fixation and unamended denit
+Nprocess <- 
+  Nprocess %>%
+  filter(Process == "NFixation" | Process == "UnamendedDenit")
 # Unite with metabolism data
-Nprocess <- left_join(Nprocess, modelResults_all, by = "date")
+#Nprocess <- left_join(Nprocess, modelResults_all, by = "date")
 ```
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
@@ -175,7 +180,7 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-```{r plotNEP, fig.cap="Average daily NEP at each site for period of record (A) and Mean monthly NEP at each site for the period of record. Ribbon extends to mean plus one standard deviation and mean minus one standard deviation (B). (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 9, fig.pos="center"}
+```{r plotNEPmonthlymean, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and calculated mean monthly NEP (B) for the period of record. Shaded ribbons (B) represent standard deviation of NEP.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
 # Plot of DOY vs GPP or ER, faceted by site
 a <- 
   ggplot(data = NULL) +
@@ -185,19 +190,19 @@ a <-
   geom_line(data = modelResults_all, aes(x = DOY, y = NEP, linetype = year), color = "darkgrey", alpha = 0.7) +
   # Lines for mean data
   geom_line(data = modelResults_DOY, aes(x = DOY, y = NEP_mean, color = site)) +
-  
   geom_hline(yintercept = 0, linetype = 2) +
   # Axis labels and scales
   ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
   xlab("Day of year") +
   labs(tag = "A") +
   # Remove legend for site
-  guides(color = FALSE) +
+  guides(color = FALSE, linetype = guide_legend(nrow = 3, title = "Year")) +
   # Theme adjustments
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"),
-        legend.position = "bottom") +
+        legend.position = "bottom",
+        legend.background = element_rect(color = "black")) +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual")
 
@@ -216,12 +221,14 @@ b <-
   # Axis labels and scales
   labs(tag = "B", fill = "Site", color = "Site") +
   ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
-  xlab("Month") +
+  xlab("Day of year") +
   # Theme adjustments
+  guides(color = guide_legend(nrow = 3), fill = guide_legend(nrow = 3))+
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"), 
-        legend.position = c(0.9, 0.8),
+        #legend.position = c(0.9, 0.8),
+        legend.position = "bottom",
         legend.background = element_rect(color = "black")) +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual") +
@@ -230,14 +237,106 @@ b <-
 grid.arrange(a,b, ncol = 2)
 ```
 
-```{r}
+```{r plotNEPloess, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and annual trends in NEP over the period of record visualized using local polynomial regression fitting (LOESS, B). Shaded ribbons (B) represent 95% confidence interval on LOESS estimate.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
+# Plot of DOY vs GPP or ER, faceted by site
+c <- 
+  ggplot(data = NULL) +
+  # Facet wrap plots
+  facet_wrap(~site, nrow = 3) +
+  # Lines for all years of data
+  geom_line(data = modelResults_all, aes(x = DOY, y = NEP, linetype = year), color = "darkgrey", alpha = 0.7) +
+  # Lines for mean data
+  geom_line(data = modelResults_DOY, aes(x = DOY, y = NEP_mean, color = site)) +
+  
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Day of year") +
+  labs(tag = "A") +
+  # Remove legend for site
+  guides(color = FALSE, linetype = guide_legend(nrow = 3, title = "Year")) +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "bottom",
+        legend.background = element_rect(color = "black")) +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual")
+
+# LOESS smooth
+d <- 
+  ggplot(data = modelResults_all, aes(x = DOY, y = NEP)) +
+  stat_smooth(aes(color = site, fill = site), method = "loess") +
+  # Horizontal line at y = 0
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  labs(tag = "B", fill = "Site", color = "Site") +
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Month") +
+  # Theme adjustments
+  guides(color = guide_legend(nrow = 3), fill = guide_legend(nrow = 3))+
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"), 
+        #legend.position = c(0.9, 0.8),
+        legend.position = "bottom",
+        legend.background = element_rect(color = "black")) +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual") +
+  scale_fill_brewer(palette = 2, type = "qual")
+
+grid.arrange(c,d, ncol = 2)
+```
+
+```{r plotNProcessRates, fig.cap="Rates", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+ggplot(data = Nprocess, 
+  aes(x = SiteName, y = ProcessRate_microgramNperhourpersquaremeter)) +
+  # Facet wrap plots
+  facet_wrap(~Process, ncol = 2) +
+  geom_jitter(aes(color = Substrate), size = 3, width = 0.4, height = 0) +
+  # Axis labels and scales
+  labs(color = "Substrate") +
+  ylab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
+  xlab("Site") +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        panel.background = element_rect(color = "black"), 
+        legend.background = element_rect(color = "black"),
+        legend.position = "bottom")  +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual")
+
+f <- 
+  ggplot(data = subset(Nprocess, Process == "UnamendedDenit"), 
+       aes(x = SiteName, y = ProcessRate_microgramNperhourpersquaremeter)) +
+  geom_jitter(aes(color = Substrate), size = 3, width = 0.4, height = 0)+
+  # Axis labels and scales
+  labs(tag = "B", color = "Substrate") +
+  ylab(expression("Unamended denitrification rate (ug-N"~m^2~"hr"^{-1}*")")) +
+  xlab("Site") +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.background = element_rect(color = "black"), 
+        legend.background = element_rect(color = "black"))  +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual")
+
+```
+
+
+```{r NEP_ProcessRate, eval=FALSE}
 ggplot(data = Nprocess) +
   geom_point(aes(y = GPP, x = ProcessRate_microgramNperhourpersquaremeter, 
                  color = site, fill = site, shape = Substrate), size = 4) +
   #geom_point(aes(y = ER, x = ProcessRate_microgramNperhourpersquaremeter, 
   #               color = site, fill = site, shape = Substrate), size = 4) +
   # Facet wrap plots
-  facet_wrap(~Process+site, nrow = 3) +
+  facet_wrap(~Process, nrow = 3) +
   # Theme adjustments
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
@@ -248,8 +347,7 @@ ggplot(data = Nprocess) +
   scale_fill_brewer(palette = 2, type = "qual")
 ```
 
-
-```{r plotGPPvsERFaceted, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
+```{r plotGPPvsERFaceted, eval=FALSE, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
 # Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
 ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   stat_density2d(aes(color = site)) +
@@ -265,8 +363,7 @@ ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   scale_color_brewer(palette = 2, type = "qual")
 ```
 
-
-```{r plotGPPvsER, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
+```{r plotGPPvsER, eval=FALSE, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
 # 2D density plot of GPP vs ER, where density is displayed as a fingerprint
 ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
   geom_density_2d(aes(color = site)) +
@@ -276,7 +373,6 @@ ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
         panel.background = element_rect(color = "black")) +
   scale_color_brewer(palette = 2, type = "qual")
 ```
-
 
 ```{r plot_map_drafts,  echo = FALSE, eval=FALSE}
 # Set center of the map 
