@@ -72,19 +72,18 @@ plot_output(model_fit)
 ```
 
 ```{r load_compiledStreamPULSE, echo = FALSE, message = FALSE, warning = FALSE}
-# Load site attributes data
+############## Load site attributes data ############## 
 sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
 
+############## Load and clean StreamPULSE metabolism data ############## 
 # Create list of file names using site ID information
 fileRegEx <- unique(paste0("predictions_",
                           sites$StreamPULSE_SiteID,".*rds"))
-
 # Pull paths of matching file names
 fileList <- lapply(fileRegEx, 
                    function(x){list.files(path = "data/all_sp_model_objects",
                                           pattern = x, full.names = T)})
 fileList <- unlist(fileList)
-
 # Load model results from files
 modelResults <- sapply(fileList, readRDS, simplify = F, USE.NAMES = T)
 
@@ -130,6 +129,18 @@ modelResults_DOY <-
             ER_mean = mean(ER, na.rm = T),
             NEP_mean = mean(GPP - abs(ER), na.rm = T),
             NEP_sd = sd(GPP - abs(ER), na.rm = T))
+
+############## Load and clean StreamPULSE nutrient data ############## 
+
+
+
+############## Load nutrient process rates data ############## 
+Nprocess <- read_csv(file = "data/CAREER_RatesTable.csv")
+# Unite site code row with Nprocess table
+Nprocess <- left_join(Nprocess, sites[c(1,4)], by = "SiteName")
+Nprocess$date <- mdy(Nprocess$date)
+# Unite with metabolism data
+Nprocess <- left_join(Nprocess, modelResults_all, by = "date")
 ```
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
@@ -164,8 +175,7 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-```{r plotNEP, fig.cap="Average daily NEP at each site for period of record (A) and Mean monthly NEP at each site for the period of record. Ribbon extends to mean plus one standard deviation and mean minus one standard deviation (B). (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
-
+```{r plotNEP, fig.cap="Average daily NEP at each site for period of record (A) and Mean monthly NEP at each site for the period of record. Ribbon extends to mean plus one standard deviation and mean minus one standard deviation (B). (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 9, fig.pos="center"}
 # Plot of DOY vs GPP or ER, faceted by site
 a <- 
   ggplot(data = NULL) +
@@ -187,8 +197,7 @@ a <-
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"),
-        #legend.position = "none"
-        ) +
+        legend.position = "bottom") +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual")
 
@@ -221,7 +230,23 @@ b <-
 grid.arrange(a,b, ncol = 2)
 ```
 
-
+```{r}
+ggplot(data = Nprocess) +
+  geom_point(aes(y = GPP, x = ProcessRate_microgramNperhourpersquaremeter, 
+                 color = site, fill = site, shape = Substrate), size = 4) +
+  #geom_point(aes(y = ER, x = ProcessRate_microgramNperhourpersquaremeter, 
+  #               color = site, fill = site, shape = Substrate), size = 4) +
+  # Facet wrap plots
+  facet_wrap(~Process+site, nrow = 3) +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"), 
+        legend.background = element_rect(color = "black")) +
+  # Color scales
+  scale_color_brewer(palette = 6, type = "qual") +
+  scale_fill_brewer(palette = 2, type = "qual")
+```
 
 
 ```{r plotGPPvsERFaceted, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
