@@ -1,0 +1,306 @@
+---
+title: "Defining Nutrient Regimes"
+description: Exploring stream energetics and element cycling with a nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism.
+author: 
+  - name: "Michelle Catherine Kelly"
+    url: https://michelleckelly.github.io
+    affiliation: Michigan Tech
+  - name: "Kevin Nevorski"
+    url: https://twitter.com/KNevorski?s=20
+    affiliation: Michigan Tech
+  - name: "Erin K. Eberhard"
+    url: https://twitter.com/Erin_K_Eberhard?s=20
+    affiliation: Michigan Tech
+  - name: "Amy M. Marcarelli"
+    url: http://marcarelli-lab.bio.mtu.edu/
+    affiliation: Michigan Tech
+date: "`r format(Sys.Date())`"
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    toc_depth: 2
+---
+
+# Abstract
+
+
+-------
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+# Load libraries
+library(tidyverse)
+library(lubridate)
+library(plotrix)
+library(gridExtra)
+library(ggmap)
+library(ggrepel)
+library(maps)
+library(wesanderson)
+```
+
+```{r model_StreamPULSE, eval = FALSE}
+# 18 Feb 2020
+# This chunk is for modeling metabolism for sites with model records not yet
+# compiled on StreamPULSE
+
+# Load libraries
+library(StreamPULSE)
+library(streamMetabolizer)
+
+# Choose model type and framework
+model_type = "bayes"
+model_name = "streamMetabolizer"
+
+# Arikaree River, CO ## Has nitrate
+site_code <- as.character(sites$StreamPULSE_SiteID[3])
+# Request all streampulse data at site for all time
+sp_data <- request_data(sitecode=site_code)
+# Format data for metabolism modeling
+sp_data_prepped <- prep_metabolism(d=sp_data, type=model_type, 
+                                   model=model_name, 
+                                   rm_flagged = list("Bad Data", "Questionable"), 
+                                   interval = "5 min",
+                                   estimate_areal_depth = TRUE,
+                                   retrieve_air_pres = TRUE)
+# Fit model and generate predictions
+model_fit <- fit_metabolism(sp_data_prepped, pool_K600='none')
+plot_output(model_fit)
+
+
+## See if you can pull in NEON discharge data with NEON utilities package
+```
+
+```{r load_compiledStreamPULSE, echo = FALSE, message = FALSE, warning = FALSE}
+# Load site attributes data
+sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
+
+# Create list of file names using site ID information
+fileRegEx <- unique(paste0("predictions_",
+                          sites$StreamPULSE_SiteID,".*rds"))
+
+# Pull paths of matching file names
+fileList <- lapply(fileRegEx, 
+                   function(x){list.files(path = "data/all_sp_model_objects",
+                                          pattern = x, full.names = T)})
+fileList <- unlist(fileList)
+
+# Load model results from files
+modelResults <- sapply(fileList, readRDS, simplify = F, USE.NAMES = T)
+
+# Create dummy function to calculate standard error
+se <- function(x){
+  sd(x, na.rm = T)/sqrt(length(na.omit(x)))
+}
+
+# Flatten list
+modelResults <- bind_rows(modelResults, .id = "site")
+
+# Compute averages by month
+modelResults_monthly <-
+  modelResults %>%
+  mutate(month = month(ymd(date), label = TRUE),
+         site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2]) %>%
+  group_by(site, month) %>%
+  summarise(GPP_sd = sd(GPP, na.rm = T), 
+            GPP_mean = mean(GPP, na.rm = T),
+            ER_sd = sd(ER, na.rm = T),
+            ER_mean = mean(ER, na.rm = T),
+            # Calculate NEP as GPP - ER
+            NEP_mean = mean(GPP - ER, na.rm = T),
+            NEP_sd = sd(GPP - ER, na.rm = T))
+
+# Compute averages by DOY
+modelResults_DOY <-
+  modelResults %>%
+  mutate(DOY = yday(date),
+         site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2]) %>%
+  group_by(site, DOY) %>%
+  summarise(GPP_sd = sd(GPP, na.rm = T), 
+            GPP_mean = mean(GPP, na.rm = T),
+            ER_sd = sd(ER, na.rm = T),
+            ER_mean = mean(ER, na.rm = T),
+            NEP_mean = mean(GPP - ER, na.rm = T),
+            NEP_sd = sd(GPP - ER, na.rm = T))
+```
+
+```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers and labels
+  geom_label_repel(data = sites, aes(x = Longitude, y = Latitude, 
+                                     label = SiteName), 
+                   box.padding = 1, size = 4, nudge_x = 0.01, 
+                   segment.size = 0.5, segment.color = "black", 
+                   label.size = 0.6) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
+             shape = 21, 
+             color = "black", size = 4, stroke = 1) +
+  coord_fixed(1.3, xlim = c(-30,-180), ylim = c(10, 75)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  scale_fill_manual(values=wes_palette(n=4, name="FantasticFox1")) +
+  guides(fill = FALSE)
+```
+
+```{r plotNEP, fig.cap="Average daily NEP at each site for period of record (A) and Mean monthly NEP at each site for the period of record. Ribbon extends to mean plus one standard deviation and mean minus one standard deviation (B). DOY = day of year. (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+# Plot of DOY vs GPP or ER, faceted by site
+a <- 
+  ggplot(data = modelResults_DOY, aes(x = DOY)) +
+  geom_line(aes(y = NEP_mean, color = site)) +
+  #geom_line(aes(y = ER_mean, color = site)) +
+  facet_wrap(~site, nrow = 3) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Day of year") +
+  labs(tag = "A") +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "none") +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual")
+
+# Plot of average NEP by month, all sites on one plot
+b <- 
+  ggplot(data = modelResults_monthly, aes(x = month, group = site)) +
+  # Ribbon for visualizing standard error
+  geom_ribbon(aes(ymin = NEP_mean-NEP_sd, 
+                  ymax = NEP_mean+NEP_sd, fill = site), alpha = 0.1)+
+  # Line and points for mean NEP
+  geom_line(aes(y = NEP_mean, color = site)) +
+  geom_point(aes(y = NEP_mean, color = site), 
+             shape = 21, fill = "white", size = 2) +
+  # Horizontal line at y = 0
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  labs(tag = "B") +
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Month") +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black")) +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual") +
+  scale_fill_brewer(palette = 2, type = "qual")
+
+grid.arrange(a,b, ncol = 2)
+```
+
+```{r plotGPPvsERFaceted, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
+# Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
+ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
+  stat_density2d(aes(color = site)) +
+  labs(x = expression("GPP (g"~O[2]~m^2~"d"^{-1}*")"),
+       y = expression("ER (g"~O[2]~m^2~"d"^{-1}*")")) +
+  facet_grid(~site) +
+  theme_classic() +
+  geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2, 
+               size = 0.3) +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "none") +
+  scale_color_brewer(palette = 2, type = "qual")
+```
+
+
+```{r plotGPPvsER, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
+# 2D density plot of GPP vs ER, where density is displayed as a fingerprint
+ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
+  geom_density_2d(aes(color = site)) +
+  theme_classic() +
+  geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2) +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black")) +
+  scale_color_brewer(palette = 2, type = "qual")
+```
+
+
+```{r plot_map_drafts,  echo = FALSE, eval=FALSE}
+# Set center of the map 
+centerlat <- mean(sites$Latitude)
+centerlon <- mean(sites$Longitude)
+
+#get google api key
+#ggmap::register_google(key = "AIzaSyAVVvaP9SHUHaQMXAJ2SLRBiV9xi657VTo")
+
+# Get watercolormap
+watercolormap <- get_map(center = c(lon = -105, lat = 45), zoom =3, 
+                         source = "stamen", maptype = "watercolor", scale = 2, 
+                         color = "color")
+
+ggmap(watercolormap) +
+  geom_label_repel(data = sites, 
+                   aes(x = Longitude, y = Latitude, label = SiteName), 
+                   box.padding = 0.7, 
+                   #point.padding = 0.5, 
+                   #direction = "both", 
+                   nudge_y = 0.002,
+                   size = 3, nudge_x = 0.001,
+                   segment.color = "black") +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude), shape = 23, 
+             color = "black", fill = "white", size = 3) +
+  theme_nothing()
+
+# Black and white map
+tonermap <- get_map(center = c(lon = -105, lat = 45), zoom =3, 
+                         source = "stamen", maptype = "toner", scale = 2, 
+                         color = "color")
+
+ggmap(tonermap) +
+  geom_label_repel(data = sites, 
+                   aes(x = Longitude, y = Latitude, label = SiteName,
+                       fill = SiteName), 
+                   box.padding = 0.7, 
+                   #point.padding = 0.5, 
+                   #direction = "both", 
+                   nudge_y = 0.002,
+                   size = 3, nudge_x = 0.001) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = SiteName), 
+             shape = 23, color = "black", size = 3) +
+  theme_nothing()
+
+# satellite
+satellitemap <- get_map(center = c(lon = -100, lat = 52), zoom =3, 
+                         source = "google", maptype = "terrain", scale = 2, 
+                         color = "color")
+
+ggmap(satellitemap) +
+  geom_label_repel(data = sites, 
+                   aes(x = Longitude, y = Latitude, label = SiteName), 
+                   box.padding = 1, 
+                   #point.padding = 0.5, 
+                   #direction = "both", 
+                   #nudge_y = 0.002,
+                   size = 4, nudge_x = 0.01, segment.size = 0.5,
+                   segment.color = "black", label.size = 0.6) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude), shape = 21, 
+             color = "black", fill = "white", size = 4, stroke = 1) +
+  theme_nothing()
+```
+
+## Acknowledgments {.appendix}
+
+This is a place to recognize people and institutions. It may also be a good place
+to acknowledge and cite software that makes your work possible.
+
+## Author Contributions {.appendix}
+
+We strongly encourage you to include an author contributions statement briefly 
+describing what each author did.

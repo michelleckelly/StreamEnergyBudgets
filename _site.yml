@@ -13,7 +13,7 @@ navbar:
     - text: "Analysis"
       href: CAREER_MetabolismAnalysis.html
     - text: "Source Code"
-      href: https://github.com/michelleckelly/CAREER_NutrientRegimes/blob/master/CAREER_MetabolismAnalysis.Rmd
+      href: https://github.com/michelleckelly/CAREER_NutrientRegimes/blob/master/CAREER_DefiningNutrientRegimes.Rmd
     - icon: fab fa-github
       href: https://github.com/michelleckelly/CAREER_NutrientRegimes/
 output:

@@ -1,0 +1,86 @@
+table,fieldName,description,dataType,units,downloadPkg
+dsc_fieldData,uid,"Unique ID within NEON database; an identifier for the record",string,NA,basic
+dsc_fieldData,recorduid,"Unique ID within NEON database; an identifier for the parent and associated child records",string,NA,basic
+dsc_fieldData,domainID,"Unique identifier of the NEON domain",string,NA,basic
+dsc_fieldData,siteID,"NEON site code",string,NA,basic
+dsc_fieldData,namedLocation,"Name of the measurement location in the NEON database",string,NA,basic
+dsc_fieldData,collectedBy,"An identifier for the technician who collected the sample or specimen",string,NA,basic
+dsc_fieldData,startDate,"The start date-time or interval during which an event occurred",dateTime,NA,basic
+dsc_fieldData,collectDate,"Date of the collection event",dateTime,NA,basic
+dsc_fieldData,streamStage,"Reading of water height on staff gauge",real,meter,basic
+dsc_fieldData,streamStageUnits,"Stage measurement units",string,NA,basic
+dsc_fieldData,handheldDeviceID,"Serial number of the handheld stream velocity device",string,NA,basic
+dsc_fieldData,velocitySensorID,"Serial number of the velocity sensor for the handheld stream velocity device",string,NA,basic
+dsc_fieldData,filterParamTime,"Length of time over which each velocity measurement was collected; this is for fixed point averaging",real,second,basic
+dsc_fieldData,stationEntryTest,"Fixed or non-fixed sample station widths; should be non-fixed",string,NA,basic
+dsc_fieldData,flowCalculation,"Flow calculation method used by the meter",string,NA,basic
+dsc_fieldData,waterEdge,"Defines which edge of the stream where transect starts; follows standard right - left convention for streams",string,NA,basic
+dsc_fieldData,totalDischarge,"Calculated discharge from the velocity meter device",real,NA,basic
+dsc_fieldData,totalDischargeUnits,"Discharge measurement units; should be in lps - liters per second or m^3/s - cubic meters per second",string,NA,basic
+dsc_fieldData,samplingProtocolVersion,"The NEON document number and version where detailed information regarding the sampling method used is available; format NEON.DOC.######vX",string,NA,basic
+dsc_fieldData,averageVelocityUnits,"Average velocity units",string,NA,basic
+dsc_fieldData,waterDepthUnits,"Water depth units",string,NA,basic
+dsc_fieldData,tapeDistanceUnits,"Tape distance units",string,NA,basic
+dsc_fieldData,flowCalcQF,"Data quality flag indicating that mid-point calculation was not used. 1 indicates data is not comparable and 0 indicates Mid-point method was used and data is comparable",string,NA,basic
+dsc_fieldData,dischargeUnitsQF,"Data quality flag indicating that discharge was reported with units other than litersPerSecond (lps). 1 indicates data is not reported with the proper units and 0 indicates data is reported with the proper units",signed integer,NA,basic
+dsc_fieldData,streamStageUnitsQF,"Data quality flag indicating that stream stage was reported with units other than meter (m). 1 indicates data is not reported with the proper units and 0 indicates data is reported with the proper units",signed integer,NA,basic
+dsc_fieldData,averageVelocityUnitsQF,"Data quality flag indicating that average velocity was reported with units other than meterPerSecond. 1 indicates data is not reported with the proper units and 0 indicates data is reported with the proper units",signed integer,NA,basic
+dsc_fieldData,waterDepthUnitsQF,"Data quality flag indicating that water depth was reported with units other than meter (m). 1 indicates data is not reported with the proper units and 0 indicates data is reported with the proper units",signed integer,NA,basic
+dsc_fieldData,tapeDistanceUnitsQF,"Data quality flag indicating that tape distance was reported with units other than meter (m). 1 indicates data is not reported with the proper units and 0 indicates data is reported with the proper units",signed integer,NA,basic
+dsc_fieldData,lowVelocityFinalQF,"Percent of point measurements for a discharge transect with velocity below the instrument detection limit",real,percent,basic
+dsc_fieldData,dataQF,"Data quality flag",string,NA,basic
+dsc_individualFieldData,uid,"Unique ID within NEON database; an identifier for the record",string,NA,basic
+dsc_individualFieldData,recorduid,"Unique ID within NEON database; an identifier for the parent and associated child records",string,NA,basic
+dsc_individualFieldData,domainID,"Unique identifier of the NEON domain",string,NA,basic
+dsc_individualFieldData,siteID,"NEON site code",string,NA,basic
+dsc_individualFieldData,namedLocation,"Name of the measurement location in the NEON database",string,NA,basic
+dsc_individualFieldData,collectedBy,"An identifier for the technician who collected the sample or specimen",string,NA,basic
+dsc_individualFieldData,startDate,"The start date-time or interval during which an event occurred",dateTime,NA,basic
+dsc_individualFieldData,collectDate,"Date of the collection event",dateTime,NA,basic
+dsc_individualFieldData,stationNumber,"Numeric identified for station number",integer,NA,basic
+dsc_individualFieldData,tapeDistance,"Distance along a tape where the point measurement of velocity and depth were taken for a transect",real,meter,basic
+dsc_individualFieldData,streamProfilingMethod,"Zero; one; two; three; five; or six point (velocity method - USGS and ISO)",string,NA,basic
+dsc_individualFieldData,waterDepth,"Depth of water",real,meter,basic
+dsc_individualFieldData,edgeFactor,"Roughness factor used only for right angled cross sections",string,NA,basic
+dsc_individualFieldData,surfaceVelocity,"Velocity of water at the surface",real,metersPerSecond,basic
+dsc_individualFieldData,oneFifthDepthVelocity,"Velocity of water at 20 percent water depth from the bed",real,metersPerSecond,basic
+dsc_individualFieldData,twoFifthDepthVelocity,"Velocity of water at 40 percent of the water depth from the bed",real,metersPerSecond,basic
+dsc_individualFieldData,threeFifthDepthVelocity,"Velocity of water at 60 percent of the water depth from the bed",real,metersPerSecond,basic
+dsc_individualFieldData,fourFifthDepthVelocity,"Velocity of water at 80 percent of the water depth from the bed",real,metersPerSecond,basic
+dsc_individualFieldData,bedVelocity,"Velocity of water at the bed",real,metersPerSecond,basic
+dsc_individualFieldData,averageVelocity,"Mean velocity from all measured points",real,metersPerSecond,basic
+dsc_individualFieldData,sectionArea,"Depth times width of the transect section",real,squareMeter,basic
+dsc_individualFieldData,sectionFlow,"Calculated flow of water for a section",real,litersPerSecond,basic
+dsc_individualFieldData,lowVelocityQF,"Data quality flag for reported velocity below the instrument detection limit",signed integer,NA,basic
+dsc_individualFieldData,dataQF,"Data quality flag",string,NA,basic
+dsc_fieldDataADCP,uid,"Unique ID within NEON database; an identifier for the record",string,NA,basic
+dsc_fieldDataADCP,stationID,"Identifier for station where sample was collected",string,NA,basic
+dsc_fieldDataADCP,domainID,"Unique identifier of the NEON domain",string,NA,basic
+dsc_fieldDataADCP,aCollectedBy,"Primary NEON technician username who collected the data",string,NA,basic
+dsc_fieldDataADCP,bCollectedBy,"Secondary NEON technician username who collected the data",string,NA,basic
+dsc_fieldDataADCP,namedLocation,"Name of the measurement location in the NEON database",string,NA,basic
+dsc_fieldDataADCP,startDate,"The start date-time or interval during which an event occurred",dateTime,NA,basic
+dsc_fieldDataADCP,endDate,"The end date-time or interval during which an event occurred",dateTime,NA,basic
+dsc_fieldDataADCP,waterTemperature,"The measured water temperature",real,celsius,basic
+dsc_fieldDataADCP,streamStage,"Reading of water height on staff gauge",real,meter,basic
+dsc_fieldDataADCP,streamStageUnits,"Stage measurement units",string,NA,basic
+dsc_fieldDataADCP,totalDischarge,"Calculated discharge from the velocity meter device",real,NA,basic
+dsc_fieldDataADCP,totalDischargeUnits,"Discharge measurement units; should be in lps - liters per second or m^3/s - cubic meters per second",string,NA,basic
+dsc_fieldDataADCP,totalDischargeRU,"The relative uncertainty of the total measured discharge as expressed by the standard deviation of the mean discharge within all transects used for the discharge measurement",real,cubicMetersPerSecond,basic
+dsc_fieldDataADCP,riverVelocityMaximum,"The maximum velocity measured in all transects included in the discharge measurement",real,metersPerSecond,basic
+dsc_fieldDataADCP,riverWidthMean,"The mean river width measured in all transects included in the discharge measurement",real,meter,basic
+dsc_fieldDataADCP,maxDepth,"Maximum depth",real,meter,basic
+dsc_fieldDataADCP,riverDepthMean,"The mean river depth measured in all transects included in the discharge measurement",real,meter,basic
+dsc_fieldDataADCP,riverDischargeMeasDuration,"The total duration of all transects included in the discharge measurement",real,second,basic
+dsc_fieldDataADCP,windSpeedPrior,"The measured wind speed prior to the discharge measurement",real,kilometersPerHour,basic
+dsc_fieldDataADCP,windDirRelativeToFlow,"The observed wind direction prior to the discharge measurement, relative to the direction of streamflow",string,NA,basic
+dsc_fieldDataADCP,velocityUnits,"Velocity units",string,NA,basic
+dsc_fieldDataADCP,widthUnits,"Width units",string,NA,basic
+dsc_fieldDataADCP,magneticVariation,"The angle between magnetic north and true north depending on geographic location",real,degree,basic
+dsc_fieldDataADCP,adcpCompassError,"The Acoustic Doppler Current Profiler compass error calculated prior to discharge measurement",real,degree,basic
+dsc_fieldDataADCP,adcpCompassCalibrated,"Whether or not the Acoustic Doppler Current Profiler compass was calibrated prior to the discharge measurement",string,NA,basic
+dsc_fieldDataADCP,stationaryMBT,"Whether or not a stationary moving bed test was performed prior to the discharge measurement",string,NA,basic
+dsc_fieldDataADCP,loopMBT,"Whether or not a loop moving bed test was performed prior to the discharge measurement",string,NA,basic
+dsc_fieldDataADCP,samplingProtocol,"The NEON document number where detailed information regarding the sampling method used is available; format NEON.DOC.######",string,NA,basic
+dsc_fieldDataADCP,dataQF,"Data quality flag",string,NA,basic
+dsc_fieldDataADCP,rawDataFileName,"Name of file or folder containing raw data, including file extension",string,NA,basic
