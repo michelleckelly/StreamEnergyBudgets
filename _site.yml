@@ -11,7 +11,7 @@ twitter:
 navbar:
   right:
     - text: "Analysis"
-      href: CAREER_MetabolismAnalysis.html
+      href: CAREER_DefiningNutrientRegimes.html
     - text: "Source Code"
       href: https://github.com/michelleckelly/CAREER_NutrientRegimes/blob/master/CAREER_DefiningNutrientRegimes.Rmd
     - icon: fab fa-github
