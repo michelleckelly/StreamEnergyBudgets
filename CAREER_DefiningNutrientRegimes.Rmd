@@ -96,6 +96,14 @@ se <- function(x){
 # Flatten list
 modelResults <- bind_rows(modelResults, .id = "site")
 
+# Format daily data
+modelResults_all <- 
+  modelResults %>%
+  mutate(site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2],
+         NEP = GPP - abs(ER),
+         DOY = yday(date),
+         year = as.factor(year(date)))
+
 # Compute averages by month
 modelResults_monthly <-
   modelResults %>%
@@ -107,8 +115,8 @@ modelResults_monthly <-
             ER_sd = sd(ER, na.rm = T),
             ER_mean = mean(ER, na.rm = T),
             # Calculate NEP as GPP - ER
-            NEP_mean = mean(GPP - ER, na.rm = T),
-            NEP_sd = sd(GPP - ER, na.rm = T))
+            NEP_mean = mean(GPP - abs(ER), na.rm = T),
+            NEP_sd = sd(GPP - abs(ER), na.rm = T))
 
 # Compute averages by DOY
 modelResults_DOY <-
@@ -120,8 +128,8 @@ modelResults_DOY <-
             GPP_mean = mean(GPP, na.rm = T),
             ER_sd = sd(ER, na.rm = T),
             ER_mean = mean(ER, na.rm = T),
-            NEP_mean = mean(GPP - ER, na.rm = T),
-            NEP_sd = sd(GPP - ER, na.rm = T))
+            NEP_mean = mean(GPP - abs(ER), na.rm = T),
+            NEP_sd = sd(GPP - abs(ER), na.rm = T))
 ```
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
@@ -156,23 +164,31 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-```{r plotNEP, fig.cap="Average daily NEP at each site for period of record (A) and Mean monthly NEP at each site for the period of record. Ribbon extends to mean plus one standard deviation and mean minus one standard deviation (B). DOY = day of year. (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+```{r plotNEP, fig.cap="Average daily NEP at each site for period of record (A) and Mean monthly NEP at each site for the period of record. Ribbon extends to mean plus one standard deviation and mean minus one standard deviation (B). (Would be neat to have a grey line for each year of data, instead of one line for the mean as is currently, and display trend with a local regression line)", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+
 # Plot of DOY vs GPP or ER, faceted by site
 a <- 
-  ggplot(data = modelResults_DOY, aes(x = DOY)) +
-  geom_line(aes(y = NEP_mean, color = site)) +
-  #geom_line(aes(y = ER_mean, color = site)) +
+  ggplot(data = NULL) +
+  # Facet wrap plots
   facet_wrap(~site, nrow = 3) +
+  # Lines for all years of data
+  geom_line(data = modelResults_all, aes(x = DOY, y = NEP, linetype = year), color = "darkgrey", alpha = 0.7) +
+  # Lines for mean data
+  geom_line(data = modelResults_DOY, aes(x = DOY, y = NEP_mean, color = site)) +
+  
   geom_hline(yintercept = 0, linetype = 2) +
   # Axis labels and scales
   ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
   xlab("Day of year") +
   labs(tag = "A") +
+  # Remove legend for site
+  guides(color = FALSE) +
   # Theme adjustments
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"),
-        legend.position = "none") +
+        #legend.position = "none"
+        ) +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual")
 
@@ -189,19 +205,24 @@ b <-
   # Horizontal line at y = 0
   geom_hline(yintercept = 0, linetype = 2) +
   # Axis labels and scales
-  labs(tag = "B") +
+  labs(tag = "B", fill = "Site", color = "Site") +
   ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
   xlab("Month") +
   # Theme adjustments
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
-        panel.background = element_rect(color = "black")) +
+        panel.background = element_rect(color = "black"), 
+        legend.position = c(0.9, 0.8),
+        legend.background = element_rect(color = "black")) +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual") +
   scale_fill_brewer(palette = 2, type = "qual")
 
 grid.arrange(a,b, ncol = 2)
 ```
+
+
+
 
 ```{r plotGPPvsERFaceted, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
 # Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
