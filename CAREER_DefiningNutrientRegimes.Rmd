@@ -148,8 +148,15 @@ Nprocess <-
 # Filter to fixation and unamended denit
 Nprocess <- 
   Nprocess %>%
-  filter(Process == "NFixation" | Process == "UnamendedDenit")
+  filter(Process == "NFixation" | Process == "UnamendedDenit") %>%
+  drop_na(StreamPULSE_SiteID)
 
+
+
+Nprocess_wide <- 
+  Nprocess %>%
+  select(-c(7:11)) %>%
+  spread(Process, ProcessRate)
 ```
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
@@ -292,6 +299,31 @@ Nprocess$Process <-
   factor(Nprocess$Process, levels = c("NFixation", "UnamendedDenit"),
          labels = c("Nitrogen Fixation", "Unamended Denitrification"))
 
+Nprocess_sitemean <- 
+  Nprocess %>%
+  group_by(StreamPULSE_SiteID, date, Process) %>%
+  summarise(ProcessRate_mean = mean(ProcessRate)) 
+
+ggplot() +
+  geom_point(data = Nprocess, aes(x = StreamPULSE_SiteID, y = ProcessRate, 
+                                  fill = Substrate), size = 3, shape = 21) +
+  geom_boxplot(data = Nprocess, aes(x = StreamPULSE_SiteID, y = ProcessRate), 
+               fill = NA) +
+  # Facet wrap plots
+  facet_wrap(~Process, ncol = 2, scales = "free_y") +
+  # Axis labels and scales
+  ylab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
+  xlab("Site") +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        panel.background = element_rect(color = "black"), 
+        legend.position = "bottom") +
+  # Color scales
+  scale_fill_brewer(palette = 2, type = "qual")
+
+
 ggplot(data = Nprocess[!is.na(Nprocess$StreamPULSE_SiteID),], 
   aes(x = StreamPULSE_SiteID, y = ProcessRate, fill = Substrate)) +
   # Facet wrap plots
@@ -316,12 +348,21 @@ ggplot(data = Nprocess[!is.na(Nprocess$StreamPULSE_SiteID),],
   scale_fill_brewer(palette = 2, type = "qual")
 ```
 
-```{r NEP_ProcessRate, fig.cap="Nitrogen fixation and denitrification rates and net ecosystem production (NEP) on day of sampling at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+```{r correlations, fig.cap="Correlations between predictor variables, computed using Pearson correlation", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 5, fig.pos="center"}
+# Subset numeric data
+Nprocess_num <- Nprocess_wide[-c(1:4, 6:7, 9:11, 12, 13, 15:16)]
+# Plot correlation
+corrplot::corrplot(cor(Nprocess_num, use = "complete.obs"), order = "hclust", 
+                   type = "upper", tl.col = "black", addgrid.col = F)
+```
+
+```{r NEPProcessRate, eval = FALSE, fig.cap="Nitrogen fixation and denitrification rates and net ecosystem production (NEP) on day of sampling at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
 # Faceted plot of N Fixation and Unamended Denitrification against NEP
 ggplot(data = Nprocess) +
   geom_point(aes(y = NEP, x = ProcessRate, 
                  color = StreamPULSE_SiteID, #fill = site, 
-                 shape = Substrate), size = 4) +
+                 shape = Substrate
+                 ), size = 4) +
   # Horizontal line at y = 0
   geom_hline(yintercept = 0, linetype = 2) +
   # Facet wrap plots
@@ -331,9 +372,9 @@ ggplot(data = Nprocess) +
   xlab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
-        panel.background = element_rect(color = "black")) +
+        panel.background = element_rect(color = "black")) #+
   # Color scales
-  scale_color_brewer(palette = 2, type = "qual")
+  #scale_color_brewer(palette = 2, type = "qual")
 ```
 
 ```{r plot_map_drafts,  echo = FALSE, eval=FALSE}
