@@ -140,12 +140,16 @@ Nprocess <- read_csv(file = "data/CAREER_RatesTable.csv")
 #Nprocess <- left_join(Nprocess, sites[c(1,4)], by = "SiteName") # This isn't being matched correctly
 Nprocess$date <- mdy(Nprocess$date)
 
+# Unite with metabolism data
+Nprocess <- 
+  left_join(Nprocess, modelResults_all, by = c("date", 
+                                               "StreamPULSE_SiteID" = "site"))
+
 # Filter to fixation and unamended denit
 Nprocess <- 
   Nprocess %>%
   filter(Process == "NFixation" | Process == "UnamendedDenit")
-# Unite with metabolism data
-#Nprocess <- left_join(Nprocess, modelResults_all, by = "date")
+
 ```
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
@@ -201,8 +205,7 @@ a <-
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"),
-        legend.position = "bottom",
-        legend.background = element_rect(color = "black")) +
+        legend.position = "bottom") +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual")
 
@@ -227,9 +230,7 @@ b <-
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"), 
-        #legend.position = c(0.9, 0.8),
-        legend.position = "bottom",
-        legend.background = element_rect(color = "black")) +
+        legend.position = "bottom") +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual") +
   scale_fill_brewer(palette = 2, type = "qual")
@@ -259,8 +260,7 @@ c <-
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"),
-        legend.position = "bottom",
-        legend.background = element_rect(color = "black")) +
+        legend.position = "bottom") +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual")
 
@@ -279,9 +279,7 @@ d <-
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black"), 
-        #legend.position = c(0.9, 0.8),
-        legend.position = "bottom",
-        legend.background = element_rect(color = "black")) +
+        legend.position = "bottom") +
   # Color scales
   scale_color_brewer(palette = 2, type = "qual") +
   scale_fill_brewer(palette = 2, type = "qual")
@@ -289,12 +287,21 @@ d <-
 grid.arrange(c,d, ncol = 2)
 ```
 
-```{r plotNProcessRates, fig.cap="Rates", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
-ggplot(data = Nprocess, 
-  aes(x = SiteName, y = ProcessRate_microgramNperhourpersquaremeter)) +
+```{r plotNProcessRates, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+Nprocess$Process <- 
+  factor(Nprocess$Process, levels = c("NFixation", "UnamendedDenit"),
+         labels = c("Nitrogen Fixation", "Unamended Denitrification"))
+
+ggplot(data = Nprocess[!is.na(Nprocess$StreamPULSE_SiteID),], 
+  aes(x = StreamPULSE_SiteID, y = ProcessRate, fill = Substrate)) +
   # Facet wrap plots
-  facet_wrap(~Process, ncol = 2) +
-  geom_jitter(aes(color = Substrate), size = 3, width = 0.4, height = 0) +
+  facet_wrap(~Process, ncol = 2, scales = "free_y") +
+  # Barplot
+  geom_bar(stat = "identity", 
+           position = position_dodge(), color = "black") +
+  # Error bars
+  geom_errorbar(aes(ymin = ProcessRate, ymax = ProcessRate+SE), 
+                position = position_dodge(0.9), width = 0.5) +
   # Axis labels and scales
   labs(color = "Substrate") +
   ylab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
@@ -304,73 +311,28 @@ ggplot(data = Nprocess,
   theme(axis.text = element_text(color = "black"), 
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         panel.background = element_rect(color = "black"), 
-        legend.background = element_rect(color = "black"),
         legend.position = "bottom")  +
   # Color scales
-  scale_color_brewer(palette = 2, type = "qual")
-
-f <- 
-  ggplot(data = subset(Nprocess, Process == "UnamendedDenit"), 
-       aes(x = SiteName, y = ProcessRate_microgramNperhourpersquaremeter)) +
-  geom_jitter(aes(color = Substrate), size = 3, width = 0.4, height = 0)+
-  # Axis labels and scales
-  labs(tag = "B", color = "Substrate") +
-  ylab(expression("Unamended denitrification rate (ug-N"~m^2~"hr"^{-1}*")")) +
-  xlab("Site") +
-  # Theme adjustments
-  theme_classic() +
-  theme(axis.text = element_text(color = "black"), 
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        panel.background = element_rect(color = "black"), 
-        legend.background = element_rect(color = "black"))  +
-  # Color scales
-  scale_color_brewer(palette = 2, type = "qual")
-
-```
-
-
-```{r NEP_ProcessRate, eval=FALSE}
-ggplot(data = Nprocess) +
-  geom_point(aes(y = GPP, x = ProcessRate_microgramNperhourpersquaremeter, 
-                 color = site, fill = site, shape = Substrate), size = 4) +
-  #geom_point(aes(y = ER, x = ProcessRate_microgramNperhourpersquaremeter, 
-  #               color = site, fill = site, shape = Substrate), size = 4) +
-  # Facet wrap plots
-  facet_wrap(~Process, nrow = 3) +
-  # Theme adjustments
-  theme_classic() +
-  theme(axis.text = element_text(color = "black"), 
-        panel.background = element_rect(color = "black"), 
-        legend.background = element_rect(color = "black")) +
-  # Color scales
-  scale_color_brewer(palette = 6, type = "qual") +
   scale_fill_brewer(palette = 2, type = "qual")
 ```
 
-```{r plotGPPvsERFaceted, eval=FALSE, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=3.5, fig.width = 8, fig.pos="center"}
-# Faceted density plot of GPP vs ER, where density is displayed as a fingerprint
-ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
-  stat_density2d(aes(color = site)) +
-  labs(x = expression("GPP (g"~O[2]~m^2~"d"^{-1}*")"),
-       y = expression("ER (g"~O[2]~m^2~"d"^{-1}*")")) +
-  facet_grid(~site) +
+```{r NEP_ProcessRate, fig.cap="Nitrogen fixation and denitrification rates and net ecosystem production (NEP) on day of sampling at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
+# Faceted plot of N Fixation and Unamended Denitrification against NEP
+ggplot(data = Nprocess) +
+  geom_point(aes(y = NEP, x = ProcessRate, 
+                 color = StreamPULSE_SiteID, #fill = site, 
+                 shape = Substrate), size = 4) +
+  # Horizontal line at y = 0
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Facet wrap plots
+  facet_wrap(~Process, nrow = 1, scales = "free_x") +
+  # Theme adjustments
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
   theme_classic() +
-  geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2, 
-               size = 0.3) +
-  theme(axis.text = element_text(color = "black"), 
-        panel.background = element_rect(color = "black"),
-        legend.position = "none") +
-  scale_color_brewer(palette = 2, type = "qual")
-```
-
-```{r plotGPPvsER, eval=FALSE, fig.cap="Fingerprint of the distribution of daily mean GPP against daily mean ER at each site. Dashed line represents 1:1 GPP:ER relationship.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=5, fig.width = 8}
-# 2D density plot of GPP vs ER, where density is displayed as a fingerprint
-ggplot(data = modelResults_DOY, aes(x = GPP_mean, y = ER_mean)) +
-  geom_density_2d(aes(color = site)) +
-  theme_classic() +
-  geom_segment(aes(x = -1.5, y = -1.5, xend = 4, yend = 4), linetype = 2) +
   theme(axis.text = element_text(color = "black"), 
         panel.background = element_rect(color = "black")) +
+  # Color scales
   scale_color_brewer(palette = 2, type = "qual")
 ```
 

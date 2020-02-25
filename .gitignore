@@ -11,3 +11,4 @@
 *.utf9.md
 *.knit.md
 *.tmp
+.Rproj.user
