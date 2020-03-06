@@ -1,1 +1,4 @@
 load("/Users/michelle/Google Drive/PhD/Research/CAREER_Project/CAREER_NutrientRegimes/data/all_sp_model_objects/modOut_NC_UNHC_2016.rds")
+load("/Users/michelle/Google Drive/PhD/Research/CAREER_Project/CAREER_NutrientRegimes/data/all_sp_model_objects/predictions_CT_BUNN_2015.rds")
+load("/Users/michelle/Google Drive/PhD/Research/CAREER_Project/CAREER_NutrientRegimes/data/all_sp_model_objects/modOut_AZ_MV_2018.rds")
+readRDS("/Users/michelle/Google Drive/PhD/Research/CAREER_Project/CAREER_NutrientRegimes/data/all_sp_model_objects/modOut_AZ_MV_2018.rds")

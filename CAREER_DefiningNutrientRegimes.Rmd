@@ -37,38 +37,7 @@ library(ggmap)
 library(ggrepel)
 library(maps)
 library(wesanderson)
-```
-
-```{r model_StreamPULSE, eval = FALSE}
-# 18 Feb 2020
-# This chunk is for modeling metabolism for sites with model records not yet
-# compiled on StreamPULSE
-
-# Load libraries
-library(StreamPULSE)
-library(streamMetabolizer)
-
-# Choose model type and framework
-model_type = "bayes"
-model_name = "streamMetabolizer"
-
-# Arikaree River, CO ## Has nitrate
-site_code <- as.character(sites$StreamPULSE_SiteID[3])
-# Request all streampulse data at site for all time
-sp_data <- request_data(sitecode=site_code)
-# Format data for metabolism modeling
-sp_data_prepped <- prep_metabolism(d=sp_data, type=model_type, 
-                                   model=model_name, 
-                                   rm_flagged = list("Bad Data", "Questionable"), 
-                                   interval = "5 min",
-                                   estimate_areal_depth = TRUE,
-                                   retrieve_air_pres = TRUE)
-# Fit model and generate predictions
-model_fit <- fit_metabolism(sp_data_prepped, pool_K600='none')
-plot_output(model_fit)
-
-
-## See if you can pull in NEON discharge data with NEON utilities package
+library(corrplot)
 ```
 
 ```{r load_compiledStreamPULSE, echo = FALSE, message = FALSE, warning = FALSE}
@@ -142,22 +111,123 @@ Nprocess$date <- mdy(Nprocess$date)
 
 # Unite with metabolism data
 Nprocess <- 
-  left_join(Nprocess, modelResults_all, by = c("date", 
-                                               "StreamPULSE_SiteID" = "site"))
+  left_join(Nprocess, modelResults_all, 
+            by = c("date", "StreamPULSE_SiteID" = "site")) 
 
 # Filter to fixation and unamended denit
 Nprocess <- 
   Nprocess %>%
-  filter(Process == "NFixation" | Process == "UnamendedDenit") %>%
-  drop_na(StreamPULSE_SiteID)
+  #filter(Process == "NFixation" | Process == "UnamendedDenit") %>%
+  drop_na(StreamPULSE_SiteID) %>%
+  filter(Substrate %in% c("Sediment", "Rock", "Wood")) %>%
+  select(-AFDM, -Chla, -SubstrateArea, -SubstrateVolume, -msgs.fit, -warnings, 
+         -errors, -DOY, -year)
+# Set Process names
+Nprocess$Process <- factor(Nprocess$Process, 
+         levels = c("N fixation", "UnamendedDenit", "Amended"),
+         labels = c("Nitrogen Fixation", "Unamended Denitrification", 
+                    "Amended Denitrification"))
 
+# Widen data
+#Nprocess_w <- 
+#  Nprocess %>%
+#  pivot_wider(names_from = Process, values_from = c(ProcessRate, SE))
 
-
-Nprocess_wide <- 
-  Nprocess %>%
-  select(-c(7:11)) %>%
-  spread(Process, ProcessRate)
+# Subset only rates measured on sediment, wood, or rock
+#Nprocess_subst <- 
+#  Nprocess_w %>%
+#  filter(Substrate %in% c("sediment", "rock", "wood")) %>%
+#  pivot_wider(names_from = Substrate, 
+#              values_from = c(ProcessRate_UnamendedDenit, ProcessRate_NFixation, 
+#                              SE_UnamendedDenit, SE_NFixation))
 ```
+
+```{r model_StreamPULSE, eval = FALSE}
+# 18 Feb 2020
+# This chunk is for modeling metabolism for sites with model records not yet
+# compiled on StreamPULSE
+
+# Load libraries
+library(StreamPULSE)
+library(streamMetabolizer)
+
+# Choose model type and framework
+model_type <- "bayes"
+model_name <- "streamMetabolizer"
+
+# Request variables
+vars <- c('DO_mgL','DOsat_pct','satDO_mgL','WaterPres_kPa',
+          'Depth_m','WaterTemp_C','Light_PAR','AirPres_kPa',
+          'Discharge_m3s', "ChlorophyllA_ugL", "Nitrate_mgL")
+
+site_code <- "MI_PILG1"
+
+# Request all streampulse data at site for all time
+sp_data <- request_data(sitecode = site_code, variables = vars)
+# Format data for metabolism modeling
+sp_data_prepped <- prep_metabolism(d=sp_data, type=model_type, 
+                                   model=model_name, 
+                                   rm_flagged = list("Bad Data", "Questionable"), 
+                                   #interval = "5 min",
+                                   estimate_areal_depth = TRUE,
+                                   #retrieve_air_pres = TRUE
+                                   )
+# Fit model and generate predictions
+model_fit <- fit_metabolism(sp_data_prepped)
+plot_output(model_fit)
+
+
+## See if you can pull in NEON discharge data with NEON utilities package
+```
+
+# Methods
+
+## Notes on StreamPULSE Data Availability for Metabolism Modeling
+
+Arikaree River, CO_ARIK-down
+- Sampled on 2017-07-11 and 2019-05-24
+- CO_ARIK-down has much more data coverage than CO_ARIK-up
+- 2017 metabolism
+  - Depth measurements run from 2017-01-01 to 2017-06-01
+  - Most coverage of DO is 2017-03-26 to 2017-05-26
+- 2018 metabolism
+  - Good coverage across full year (except for nitrate)
+- 2019 metabolism
+  - Depth measurements run from 2019-01-01 to 2019-06-01
+  - DO measurements spotty between 2019-01-01 to 2019-06-01, most coverage between 2019-04-18 to 2019-05-20
+  
+Red Butte Creek, UT_REDB-up
+
+Pringle Creek, TX_PRIN-up
+
+McDiffet Creek, KS_MCDI-up
+
+Kings Creek, KS_KING-up
+
+Hubbard Brook Forest, NH_HBF
+- Sampled on 2018-08-07
+
+Wednesday Hill Brook, NH_WHB
+- Sampled on 2018-08-09
+
+Lower Hop Brook, MA_HOPB-down
+
+Rio Guilarte, 	PR_GUIL-up
+- These rates and forward not yet calculated
+
+Rio Cupeyes, PR_CUPE-up
+
+Sycamore Creek, AZ_SYCA-up
+
+Caribou Creek, AK_CARI-up
+
+Blacktail Deer Creek, WY_BLDE-up
+
+McRae Creek, OR_MCRA-up
+
+Martha Creek, WA_MART-up
+
+
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 # Pull state map data
@@ -295,26 +365,18 @@ grid.arrange(c,d, ncol = 2)
 ```
 
 ```{r plotNProcessRates, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
-Nprocess$Process <- 
-  factor(Nprocess$Process, levels = c("NFixation", "UnamendedDenit"),
-         labels = c("Nitrogen Fixation", "Unamended Denitrification"))
-
-Nprocess_sitemean <- 
-  Nprocess %>%
-  group_by(StreamPULSE_SiteID, date, Process) %>%
-  summarise(ProcessRate_mean = mean(ProcessRate)) 
-
 ggplot() +
   geom_point(data = Nprocess, aes(x = StreamPULSE_SiteID, y = ProcessRate, 
                                   fill = Substrate), size = 3, shape = 21) +
   geom_boxplot(data = Nprocess, aes(x = StreamPULSE_SiteID, y = ProcessRate), 
                fill = NA) +
   # Facet wrap plots
-  facet_wrap(~Process, ncol = 2, scales = "free_y") +
+  facet_wrap(~Process, ncol = 3, scales = "free_y") +
   # Axis labels and scales
   ylab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
   xlab("Site") +
   # Theme adjustments
+  scale_y_continuous(limits = c(0, NA)) +
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
@@ -322,44 +384,47 @@ ggplot() +
         legend.position = "bottom") +
   # Color scales
   scale_fill_brewer(palette = 2, type = "qual")
-
-
-ggplot(data = Nprocess[!is.na(Nprocess$StreamPULSE_SiteID),], 
-  aes(x = StreamPULSE_SiteID, y = ProcessRate, fill = Substrate)) +
-  # Facet wrap plots
-  facet_wrap(~Process, ncol = 2, scales = "free_y") +
-  # Barplot
-  geom_bar(stat = "identity", 
-           position = position_dodge(), color = "black") +
-  # Error bars
-  geom_errorbar(aes(ymin = ProcessRate, ymax = ProcessRate+SE), 
-                position = position_dodge(0.9), width = 0.5) +
-  # Axis labels and scales
-  labs(color = "Substrate") +
-  ylab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
-  xlab("Site") +
-  # Theme adjustments
-  theme_classic() +
-  theme(axis.text = element_text(color = "black"), 
-        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        panel.background = element_rect(color = "black"), 
-        legend.position = "bottom")  +
-  # Color scales
-  scale_fill_brewer(palette = 2, type = "qual")
 ```
 
 ```{r correlations, fig.cap="Correlations between predictor variables, computed using Pearson correlation", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 5, fig.pos="center"}
-# Subset numeric data
-Nprocess_num <- Nprocess_wide[-c(1:4, 6:7, 9:11, 12, 13, 15:16)]
+# Subset only rates measured on sediment or rock, seperate into columns, 
+# Get rid of non-numeric columns
+corrmatrix <- 
+  Nprocess %>%
+  filter(ProcessRate > 0) %>% # Only use non-zero rates
+  mutate(absvalER = abs(ER), ER = NULL) %>%
+  select(-SE, -GPP.lower, -GPP.upper, -ER.lower, -ER.upper) %>%
+  pivot_wider(names_from = Process, values_from = ProcessRate) %>%
+  filter(Substrate %in% c("Sediment", "Rock", "Wood")) %>%
+  #pivot_wider(names_from = Substrate, 
+   #           values_from = c(UnamendedDenit, NFixation)) %>%
+  # Filter out non-numeric columns
+  select(-date, -SiteName, -StreamPULSE_SiteID, -Substrate)
+
 # Plot correlation
-corrplot::corrplot(cor(Nprocess_num, use = "complete.obs"), order = "hclust", 
-                   type = "upper", tl.col = "black", addgrid.col = F)
+corrplot(cor(corrmatrix, use = "pairwise.complete.obs"), #order = "hclust", 
+         type = "upper", tl.col = "black", addgrid.col = F, outline = T, 
+         addCoef.col = "white", tl.cex = 0.8)
 ```
 
 ```{r NEPProcessRate, eval = FALSE, fig.cap="Nitrogen fixation and denitrification rates and net ecosystem production (NEP) on day of sampling at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
 # Faceted plot of N Fixation and Unamended Denitrification against NEP
+ggplot(data = Nprocess_subst) +
+  geom_point(aes(x = ProcessRate_UnamendedDenit_rock, y = abs(ER), color = "rock")) +
+  geom_point(aes(x = ProcessRate_UnamendedDenit_sediment, y = abs(ER), color = "sediment")) 
+
+ggplot(data = Nprocess_subst) +
+  geom_point(aes(x = ProcessRate_UnamendedDenit_rock, y = NEP, color = "rock")) +
+  geom_point(aes(x = ProcessRate_UnamendedDenit_sediment, y = NEP, color = "sediment")) +
+  scale_x_continuous(limits = c(1, NA))
+
+ggplot(data = Nprocess_subst) +
+  geom_point(aes(x = ProcessRate_NFixation_rock, y = NEP, color = "rock")) +
+  geom_point(aes(x = ProcessRate_NFixation_sediment, y = NEP, color = "sediment")) 
+  scale_x_continuous(limits = c(1, NA))
+
 ggplot(data = Nprocess) +
-  geom_point(aes(y = NEP, x = ProcessRate, 
+  geom_point(aes(y = GPP, x = ProcessRate, 
                  color = StreamPULSE_SiteID, #fill = site, 
                  shape = Substrate
                  ), size = 4) +
@@ -367,8 +432,9 @@ ggplot(data = Nprocess) +
   geom_hline(yintercept = 0, linetype = 2) +
   # Facet wrap plots
   facet_wrap(~Process, nrow = 1, scales = "free_x") +
+  scale_x_continuous(limits = c(0, NA))+
   # Theme adjustments
-  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  ylab(expression("GPP (g"~O[2]~m^2~"d"^{-1}*")")) +
   xlab(expression("Rate (ug-N"~m^2~"hr"^{-1}*")")) +
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
