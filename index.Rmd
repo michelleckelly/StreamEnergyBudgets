@@ -1,6 +1,6 @@
 ---
-title: "Defining Nutrient Regimes"
-description: Exploring stream energetics and element cycling with a nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism.
+title: "Defining Nutrient Cycling Regimes"
+description: A nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism in streams.
 author: 
   - name: "Michelle Catherine Kelly"
     url: https://michelleckelly.github.io
@@ -24,10 +24,6 @@ Hello, Website!
 
 ## Acknowledgments {.appendix}
 
-This is a place to recognize people and institutions. It may also be a good place
-to acknowledge and cite software that makes your work possible.
+We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.
 
-## Author Contributions {.appendix}
-
-We strongly encourage you to include an author contributions statement briefly 
-describing what each author did.
+Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 

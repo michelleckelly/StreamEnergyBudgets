@@ -1,5 +1,5 @@
 name: "CAREER_NutrientRegimes"
-title: "CAREER Project: Defining Nutrient Regimes"
+title: "CAREER Project: Defining Nutrient Cycling Regimes"
 output_dir: "docs"
 include: ["import.R"]
 exclude: ["docs.txt", "*.csv"]

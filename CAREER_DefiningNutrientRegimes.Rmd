@@ -1,6 +1,6 @@
 ---
-title: "Defining Nutrient Regimes"
-description: Exploring stream energetics and element cycling with a nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism.
+title: "Defining Nutrient Cycling Regimes"
+description: A nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism in streams.
 author: 
   - name: "Michelle Catherine Kelly"
     url: https://michelleckelly.github.io
@@ -366,6 +366,23 @@ d <-
   scale_fill_brewer(palette = 2, type = "qual")
 
 grid.arrange(c,d, ncol = 2)
+
+
+
+# Compute PCA of metabolism data
+prcomp(modelResults_all[,c(3,6,12,13)], center = T, scale. = T)
+
+
+modelResults_all %>%
+  select(GPP, ER, NEP, DOY)
+
+# Compute Kmediods using pam (Partitioning Around Medoids) from cluster
+collsub_kmediods <- pam(colleges_sub, k = 3)
+# For K-mediods results
+fviz_cluster(collsub_kmediods, data = colleges_sub) + 
+  labs(tag = "B", title = "K-mediods clustering") +
+  theme_classic() +
+  theme(legend.position = "none")
 ```
 
 ```{r plotNProcessRates, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood; where rock includes rock flock, rock cobble, rock scrape, bedrock scrape, pebble, and bedrock; sediment includes clay) at each study site. Vertical black lines extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range. Note that y-axis is on a log scale.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 10, fig.pos="center"}
@@ -442,6 +459,10 @@ corrmatrix <-
 corrplot(cor(corrmatrix, use = "pairwise.complete.obs"), #order = "hclust", 
          type = "upper", tl.col = "black", addgrid.col = F, outline = T, 
          addCoef.col = "white", tl.cex = 0.8)
+
+# Test denitrificiation vs GPP, denit vs ER
+cor.test(x = corrmatrix$`Unamended Denitrification`, y = corrmatrix$GPP)
+cor.test(x = corrmatrix$`Unamended Denitrification`, y = corrmatrix$absvalER)
 ```
 
 ```{r NEPProcessRate, eval = FALSE, fig.cap="Nitrogen fixation and denitrification rates and net ecosystem production (NEP) on day of sampling at each study site.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 8, fig.pos="center"}
