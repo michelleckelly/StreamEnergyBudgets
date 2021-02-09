@@ -1,0 +1,73 @@
+State,SiteName,Source,LandUse,Latitude,Longitude,StudyDate_N15,BIOME,DrainageArea_ha,PCT_NATVEG,PCT_AGR,PCT_URB,PCT_CHANSLOPE,Discharge_Ls,Width_m,v_mmin,Depth_m,WaterTemp_C,NO3_ugNL,NH4_ugNL,SRP_ugL,DOC_mgL,TotalNO3UptakeRate_m,DenitrificationRate_m,NOTES
+MA,Cart Creek,LINXII,REF,42.77133,-70.91995,15-Jul-03,deciduous_n,395.7,56.6,8,10.7,0.01,4.8,2.5,0.6,0.18,17.9,15,293,1,8.7,2.81E-03,NaN,Land cover total does not include 24.8% wetlands
+MA,IS_104,LINXII,URB,42.53797,-71.20925,29-Jul-03,deciduous_n,132.9,12.5,5.4,65.9,0.01,2.1,1.3,0.9,0.11,17.1,1336,121,2,2.8,7.03E-04,4.33E-04,Land cover total does not include 16.2% wetlands
+MA,Boxford,LINXII,REF,42.64177,-70.9943,27-Jul-04,deciduous_n,155.2,79.9,0,1.4,0.02,12.2,1.5,4,0.12,19.8,53,13,9,6.8,7.29E-04,1.95E-04,Land cover total does not include 18.7% wetlands
+MA,Runaway Brook,LINXII,AGR,42.64763,-70.8597,29-Jun-04,deciduous_n,39,5.7,91.2,0,0.01,0.7,0.6,1.1,0.07,16.3,1164,80,8,2.1,1.02E-03,2.52E-04,Land cover total does not include 3.1% wetlands
+MA,Long Meadow Brook,LINXII,AGR,42.65252,-70.848,13-Jul-04,deciduous_n,89.2,26,67.6,1.1,0.01,2.4,1.1,2.2,0.06,16.6,989,63,11,3.5,5.50E-04,5.35E-04,Land cover total does not include 5.4% wetlands
+MA,Gravelly Brook,LINXII,REF,42.66302,-70.90089,9-Aug-05,deciduous_n,533.9,65.1,2.2,5,0.43,2,2.5,1.1,0.04,21.4,112,435,80,25.6,NaN,NaN,Land cover total does not include 27.7% wetlands
+MA,Black Brook,LINXII,AGR,42.64428,-70.87115,12-Jul-05,deciduous_n,620.4,46.1,19.7,10.9,0.56,120.1,2.6,2.5,1.12,22.6,50,31,34,13.9,2.63E-04,7.46E-05,Land cover total does not include 23.2% wetlands
+MA,Sawmill Brook,LINXII,URB,42.52238,-71.186,26-Jul-05,deciduous_n,402.1,17,4.2,72.2,0.01,4.9,2.7,0.8,0.15,21.2,1025,39,11,10,2.47E-04,1.60E-04,Land cover total does not include 6.5% wetlands
+MA,IS_118,LINXII,URB,42.58234,-71.07825,7-Jul-05,deciduous_n,201.5,36.5,3.9,46.7,0.68,11.3,1.7,4.1,0.09,18.7,513,254,12,12.5,2.17E-04,2.17E-04,Land cover total does not include 12.9% wetlands
+NC,Hugh White Creek,LINXII,REF,35.04955,-83.43058,23-May-03,deciduous_s,19.8,100,0,0,,19.4,3.7,6.7,0.05,12.7,7,3,3,0.4,2.36E-03,NaN,
+NC,Hoglot Branch,LINXII,AGR,35.09324,-83.38626,10-Jun-03,deciduous_s,245.7,89,10,1,,52.7,1.7,11.8,0.16,17.6,154,17,3,0.6,NaN,NaN,
+NC,Crawford Branch,LINXII,URB,35.17988,-83.40549,20-Jun-03,deciduous_s,82.2,90.2,4.4,5.4,,45,1.5,8.3,0.21,17.3,103,15,4,0.6,1.48E-04,NaN,
+NC,Big Hurricane Branch,LINXII,REF,35.06897,-83.4434,20-May-04,deciduous_s,8.5,100,0,0,,12.2,2.4,2.6,0.12,14.7,241,6,3,0.5,7.92E-05,3.45E-05,
+NC,Jerry Branch,LINXII,AGR,34.95625,-83.40396,22-Jun-04,deciduous_s,106.7,71.9,27.4,0.7,,26.5,1.8,9.1,0.09,18,406,108,18,1.6,5.45E-05,3.10E-05,
+NC,Mud Creek,LINXII,URB,34.98761,-83.3169,16-Jun-04,deciduous_s,130.8,84,16,0,,51.8,1.9,13.6,0.12,16.7,140,6,2,1.4,1.56E-04,5.45E-06,
+NC,Cunningham Creek,LINXII,REF,35.04964,-83.4551,3-Jun-05,deciduous_s,41,100,0,0,,49.3,2.3,7.1,0.19,12.7,10,3,2,0.9,9.98E-04,7.34E-04,
+NC,Blacks Branch,LINXII,AGR,34.94276,-83.38099,16-Jun-05,deciduous_s,350,93.4,6.6,0,,189.4,1.9,29.5,0.2,16.1,173,8,7,0.8,1.21E-04,1.22E-05,
+NC,Sugarloaf Creek,LINXII,URB,35.37986,-83.11826,9-Jun-05,deciduous_s,199,99.8,0.2,0,,79.8,2.3,13.8,0.15,13.8,54,3,3,0.9,2.04E-04,1.10E-04,
+MI,Sand Creek,LINXII,REF,42.57838,-85.92831,18-Jun-03,deciduous_n,133,42.3,56.2,1.5,,4.9,1.1,6.7,0.04,15.1,283,55,15,4.3,1.02E-03,1.54E-04,native vegetation comprised of both  forested uplands plus wetlands
+MI,Steinke Drain,LINXII,AGR,42.70768,-85.69205,5-Jun-03,deciduous_n,123.8,4.9,94.9,0.2,,1.7,1.2,4.3,0.02,12.3,4158,29,68,18.7,2.46E-03,1.33E-05,
+MI,DORR,LINXII,URB,42.72748,-85.72134,12-Jun-03,deciduous_n,202.7,16.3,76.3,7.4,,35,1.4,8.6,0.17,12.4,1100,128,9,2.4,2.00E-04,3.17E-05,native vegetation comprised of both  forested uplands plus wetlands
+MI,Bullet,LINXII,REF,42.29769,-85.36161,5-May-04,deciduous_n,358.7,70.6,27.9,1.5,,6.5,1.4,5.9,0.05,12.6,384,11,2,1.2,4.50E-04,3.95E-04,
+MI,Buskirk,LINXII,AGR,42.63578,-85.66225,5-Aug-04,deciduous_n,201.9,43.6,51.3,5.1,,6,0.9,10.5,0.04,17.9,82,21,11,8.2,2.30E-03,9.42E-05,
+MI,Wayland,LINXII,URB,42.67094,-85.66053,16-Jun-04,deciduous_n,163.8,33.3,13.3,53.3,,11.7,1.2,7,0.09,17.8,695,74,5,7.4,4.10E-04,7.59E-05,
+MI,Honeysuckle,LINXII,REF,42.30852,-85.34023,1-Jun-05,deciduous_n,548.5,94.9,5.2,0,0.54,99.4,3.2,11.6,0.16,22.2,4,21,4,4.2,NaN,NaN,
+MI,Bellingham,LINXII,AGR,42.49301,-85.57034,11-May-05,deciduous_n,198.6,53.4,46.2,0.4,1.71,22.9,1.2,15.9,0.07,11.8,1453,28,2,3,1.14E-04,5.96E-06,
+MI,Arcadia,LINXII,URB,42.27308,-85.61664,20-Jun-05,deciduous_n,3712.5,45.8,41.9,12.3,0.05,110.1,2.5,10.1,0.26,20,274,32,11,2.8,7.00E-04,4.34E-05,
+KS,Kings Creek N4D,LINXII,REF,39.08792,-96.58443,21-May-03,tallgrass,134.5,100,0,0,3.47,13.4,2.4,5,0.07,13.5,9,0,1,0.7,6.22E-03,3.33E-04,
+KS,Agnorth,LINXII,AGR,39.21247,-96.59275,11-Jun-03,tallgrass,504,26,30,45,1.75,0.2,0.8,1.1,0.02,21.5,35,32,0,4.2,6.09E-03,NaN,
+KS,Campus Creek,LINXII,URB,39.19273,-96.57873,1-Jul-03,tallgrass,165,2,0,98,1.51,2.9,2.6,0.9,0.08,25.5,2942,8,4,4.2,1.37E-03,2.77E-05,
+KS,K2A,LINXII,REF,39.10017,-96.57388,30-Jun-04,tallgrass,302,100,0,0,3.21,26.3,2.5,6.7,0.09,17.4,1,7,2,0.8,7.73E-03,NaN,
+KS,Natalie Creek,LINXII,AGR,39.2286,-96.65893,22-Jun-04,tallgrass,69,0,100,0,2.74,1.3,1.2,1.6,0.04,20.4,6,3,2,1.6,1.47E-02,NaN,
+KS,Walmart Ditch,LINXII,URB,39.1854,-96.5583,27-May-04,tallgrass,742,2,0,98,1.41,1.6,2.1,0.9,0.05,27.1,277,28,35,3.8,7.87E-03,2.75E-03,
+KS,Shane Creek,LINXII,REF,39.11293,-96.55552,17-May-05,tallgrass,342,99,1,0,3.78,4.4,2.4,1.2,0.09,14.9,1,5,1,0.5,5.07E-02,NaN,
+KS,Swine,LINXII,AGR,39.21823,-96.57409,27-Jun-05,tallgrass,730,30,34,36,1.87,5.4,1.6,2.8,0.07,20.8,21162,3,16,2.4,1.89E-03,3.58E-05,"native vegetation consists of ""pasture and riparian"""
+KS,Little Kitten,LINXII,URB,39.20579,-96.63429,8-Jun-05,tallgrass,440,0,0,100,2.61,20.1,3.3,2.7,0.14,19.7,168,24,7,1.7,1.29E-03,1.52E-04,
+WY,Ditch,LINXII,REF,43.66346,-110.62764,8-Jul-03,conifer_dry,7577,98.6,1.4,0,,55.7,4.7,11.7,0.06,16.8,0,2,2,2.2,3.85E-03,NaN,
+WY,Giltner,LINXII,AGR,43.549,-110.84028,4-Jul-03,shrub,165,2.7,97.3,0,,158.5,5.7,10.2,0.16,12,50,3,3,2,5.65E-03,NaN,
+WY,Golf,LINXII,URB,43.5667,-110.7523,20-Jul-03,shrub,160565,99,1,0,,110,2.6,14.4,0.18,18.6,1,1,2,0.3,3.90E-03,NaN,Drainage area based on diversion point of the main ditch from the Gros Ventre River; study ditch  was diverted from the main ditch downstream from  withdrawal point
+WY,Two Oceans,LINXII,REF,43.87618,-110.48765,17-Jul-04,shrub,2935,100,0,0,,64.5,2.9,15.6,0.09,12.8,19,4,10,1.3,2.15E-03,1.83E-04,
+WY,Headquarters,LINXII,AGR,43.56765,-110.80033,10-Jul-04,shrub,78.4,41.4,58.6,0,,131.1,5.2,9.6,0.16,16,1,3,15,0.8,1.18E-02,5.81E-03,
+WY,Teton Pines,LINXII,URB,43.53045,-110.84283,14-Jul-04,shrub,3.3,62.5,37.5,0,,9.5,2.4,2.8,0.08,10.9,152,1,3,0.4,1.80E-03,4.39E-05,
+WY,Spread,LINXII,REF,43.78808,-110.53155,19-Jul-05,shrub,27260.5,100,0,0,1.4,267.8,6.6,16,0.15,14.3,3,2,,1.6,2.35E-03,NaN,
+WY,Kimball,LINXII,AGR,43.56722,-110.81687,6-Jul-05,shrub,4127.6,66.3,33.7,0,0.48,153.8,4.6,9.3,0.22,11.2,28,1,4,0.7,3.45E-03,1.06E-04,
+WY,Fish,LINXII,URB,43.58463,-110.82771,12-Jul-05,shrub,773.7,78.9,20.1,1,0.44,102.9,2.2,8.8,0.31,9.9,235,4,6,0.3,4.00E-04,2.76E-05,
+SW,Agua Fria,LINXII,REF,34.3516,-112.1041,15-May-03,desert,65908,100,0,0,,11.9,3.1,8,0.03,18,0,2,56,0.9,2.50E-02,1.01E-02,
+SW,Bernalillo Drain,LINXII,AGR,35.3267,-106.5471,20-Jun-03,desert,94,0,100,0,,23.5,2.9,2.8,0.17,18.6,2,2,37,1.8,1.32E-02,NaN,
+SW,Rio Rancho,LINXII,URB,35.1979,-106.6445,16-Jul-03,desert,329,0,0,100,,17.8,4.4,2,0.12,23.3,13,3,50,2.4,1.07E-02,NaN,
+SW,Rio Salado,LINXII,REF,34.3358,-107.0392,22-May-04,desert,344744,100,0,0,,5.8,3.7,6.4,0.01,18,4,4,3,1,4.40E-03,NaN,
+SW,Rio Puerco,LINXII,AGR,34.4098,-106.8538,9-May-04,desert,1584719,0,100,0,,2.5,1.3,1.4,0.08,20.5,4,4,14,3.8,2.04E-02,1.85E-04,
+SW,San Pedro,LINXII,AGR,35.2077,-106.309,2-Jul-04,desert,9624,0,100,0,,4,2,7.4,0.02,16.3,297,4,19,0.9,3.51E-03,7.56E-04,
+SW,Sycamore Creek,LINXII,REF,33.7533,-111.506,6-Jul-05,desert,27453,100,0,0,,21.3,3.7,13.5,0.03,25.4,58,2,32,2.2,5.40E-03,1.07E-04,
+SW,Indian Bend Wash,LINXII,URB,33.47281,-111.91532,2-Nov-03,desert,27900,0,0,100,,28.4,4.8,1.6,0.23,20,99,65,21,NaN,1.94E-04,NaN,
+SW,Tempe Town lake,LINXII,URB,33.4337,-111.949,17-Apr-04,desert,247700,0,0,100,,18,4.1,1,0.25,22.2,4,10,25,1,6.90E-03,1.35E-04,"MCK note: No N15 location originally listed, location is from COORDINATE_1 columns"
+OR,Oak,LINXII,REF,44.61143,-123.33049,26-Aug-03,conifer_wet,523,99.8,0.2,0,2.52,7.5,2.1,2.8,0.08,15.1,71,1,35,2,1.05E-03,NaN,Note to OR:  %impervious is required to be added in to sum to 100%.  Is this correct? Or should it be added to % urban?
+OR,Oak,LINXII,AGR,44.56827,-123.30289,13-Aug-03,conifer_wet,3082.1,76.6,15.5,6.9,1.31,5.5,2.7,0.7,0.19,17.3,96,8,48,10.1,1.50E-03,6.61E-05,1.31% of urban cover is impervious
+OR,Oak,LINXII,URB,44.55859,-123.28514,30-Jul-03,conifer_wet,3307.7,72.3,16.7,9.3,1.29,5.6,3.9,0.4,0.23,20.3,163,19,45,1.9,1.11E-03,1.96E-04,area bordering site is urban; 1.65% impervious
+OR,Mack,LINXII,REF,44.21657,-122.16369,31-Aug-04,conifer_wet,575.1,100,0,0,17.12,30.7,6.7,5.6,0.05,12.5,63,6,13,0.9,6.46E-04,NaN,
+OR,Camp,LINXII,AGR,44.11541,-122.81954,28-Jul-04,conifer_wet,2652.8,98.4,1.5,0.1,2.37,113.4,5.9,4.6,0.25,17.6,54,6,5,0.9,2.35E-04,5.78E-05,area bordering site is ag
+OR,Amazon,LINXII,URB,44.04388,-123.09453,7-Jul-04,conifer_wet,1971.2,26.2,2.3,51.8,0.48,25,6.4,3.4,0.07,21.1,2,5,18,3.4,9.98E-03,NaN,Includes 19.7% impervious which is roads only does not include parking lots & roofs.  Natural vegetation is parks.
+OR,Potts,LINXII,REF,44.26377,-122.48923,28-Jul-05,conifer_wet,21.9,100,0,0,11.35,19,2.9,5,0.08,13.7,69,4,25,1.3,4.62E-04,NaN,
+OR,Courtney,LINXII,AGR,44.36367,-122.9675,13-Jul-05,conifer_wet,106,19.4,80.2,0.5,0.33,34.7,3.3,3.3,0.19,18.9,97,11,5,2.6,1.81E-03,2.35E-04,
+OR,Periwinkle,LINXII,URB,44.61951,-123.07788,17-Aug-05,conifer_wet,247,3.7,26.3,48.2,0.5,2.7,3.4,0.3,0.19,22.6,8,4,209,7,4.07E-02,NaN,21.75% of urban area is impervious but for roads only; does not include parking lots
+PR,Bisley,LINXII,REF,18.3165,-65.74835,4-Feb-04,tropical,58.2,99.7,0,0.3,31,12.5,3.2,2.4,0.1,21.3,171,3,22,0.6,1.03E-03,4.52E-04,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Grande,LINXII,AGR,18.15932,-65.95035,19-Feb-04,tropical,95.2,28.3,69.3,2.4,10.6,12.3,1,10.9,0.07,23,276,11,13,1.8,7.03E-04,2.56E-05,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Petunia,LINXII,URB,18.38523,-66.08513,27-Feb-04,tropical,110,6.7,0,93.3,2.5,4.7,1.8,1.4,0.11,24.3,997,15,26,1.5,8.34E-04,2.99E-04,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,RIT,LINXII,REF,18.28048,-65.78925,24-Feb-05,tropical,30.3,100,0,0,15.6,20,1.2,5.8,0.17,19,131,7,0,0.3,2.02E-04,1.51E-05,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Maizales,LINXII,AGR,18.23354,-65.75931,11-Feb-05,tropical,265.3,61.7,34.3,4,20.9,25,3.5,1.6,0.26,23,206,7,12,0.9,2.23E-03,4.38E-05,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Mtrib,LINXII,URB,18.3704,-65.77972,2-Feb-05,tropical,159.9,42,1.5,56.5,11.2,23.2,2.5,1.4,0.41,20.8,174,2204,311,2.2,1.04E-03,1.01E-03,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Pared,LINXII,REF,18.33409,-65.82162,23-Feb-06,tropical,64,99.7,0.2,0,24.1,5.2,2.7,1.1,0.1,22.1,105,3,7,1.3,3.18E-03,4.21E-05,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Vaca,LINXII,AGR,18.3434,-65.84181,11-Feb-06,tropical,172,60.5,32.2,7.4,15.6,111.9,2,3.6,0.94,23,446,3,9,1,1.18E-04,8.66E-05,land use data is not NLCD! It is Landsat specific to Puerto Rico
+PR,Ceiba,LINXII,URB,18.27135,-65.64887,6-Feb-06,tropical,505.3,44.2,2.7,53.2,9.6,49.5,2.7,4.1,0.27,25.3,512,50,22,2.2,4.30E-04,1.75E-04,land use data is not NLCD! It is Landsat specific to Puerto Rico

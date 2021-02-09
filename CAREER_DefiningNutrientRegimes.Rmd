@@ -38,6 +38,9 @@ library(ggrepel)
 library(maps)
 library(wesanderson)
 library(corrplot)
+library(svMisc)
+
+
 ```
 
 ```{r load_compiledStreamPULSE, echo = FALSE, message = FALSE, warning = FALSE}
@@ -128,6 +131,11 @@ Nprocess$Process <- factor(Nprocess$Process,
          labels = c("Nitrogen Fixation", "Unamended Denitrification", 
                     "Amended Denitrification"))
 
+############## Load LINXII data ############## 
+sites_LINXII <- read_csv(file = "data/LINXII_Denit_Mulholland2009.csv",
+                         na = "NaN") %>% 
+  filter(!is.na(DenitrificationRate_m))
+
 # Widen data
 #Nprocess_w <- 
 #  Nprocess %>%
@@ -160,31 +168,224 @@ vars <- c('DO_mgL','DOsat_pct','satDO_mgL','WaterPres_kPa',
           'Depth_m','WaterTemp_C','Light_PAR','AirPres_kPa',
           'Discharge_m3s', "ChlorophyllA_ugL", "Nitrate_mgL")
 
-site_code <- "MI_PILG1"
-
-# Request all streampulse data at site for all time
-sp_data <- request_data(sitecode = site_code, variables = vars)
-# Format data for metabolism modeling
-sp_data_prepped <- prep_metabolism(d=sp_data, type=model_type, 
-                                   model=model_name, 
-                                   rm_flagged = list("Bad Data", "Questionable"), 
-                                   #interval = "5 min",
-                                   estimate_areal_depth = TRUE,
-                                   #retrieve_air_pres = TRUE
-                                   )
-# Fit model and generate predictions
-model_fit <- fit_metabolism(sp_data_prepped)
-plot_output(model_fit)
-
-
 ## See if you can pull in NEON discharge data with NEON utilities package
+# Data to be pulled from NEON:
+# Depth_m, WaterTemp_C, Nitrate_mgL, ChlorophyllA_ugL, DO_mgL, DOsat_pct, satDO_mgL, WaterPres_kPa, Light_PAR, AirPres_kPa, Discharge_m3s 
+
+# Streampulse variable    NEON product ID     NEON name
+# Depth_m                 DP1.20016.001       Elevation of surface water
+# WaterTemp_C             DP1.20053.001       Temperature (PRT) in surface water
+# DO_mgL                  DP1.20288.001       Water quality
+# DOsat_pct
+# satDO_mgL
+# WaterPres_kPa
+# Light_PAR               DP1.00024.001       Photosynthetically active radiation (PAR)
+# AirPres_kPa
+# Discharge_m3s
+# Nitrate_mgL
+# ChlorophyllA_ugL      DP1.20288.001       Water quality
+
+# Ahh. NEON collects field-based surveys of discharge, intermittant
+
+# Define list of sites for metabolism modeling
+siteList <- c("NH_HBF", "NH_WHB", "MA_HOPB-down", "PR_GUIL-up")
+
+# This loop will iterate through the list of sites, pulling data from 
+# StreamPULSE and modeling metabolism for the period of record. Metabolism 
+# models for each site will be saved to RData files within /model_outputs/
+for (i in 1:length(siteList)){
+  # Define site
+  site <- siteList[i]
+  print(site)
+  flush.console()
+  # Start timer for run
+  startTime <- proc.time()
+  
+  ######################## Pull data from StreamPULSE ########################
+  data <- request_data(sitecode = site, variables = vars)
+  # If error in pulling data, throw warning and move on to next site in list
+  if (!exists("data")){
+    warning(paste0("Data could not be pulled for site ", site))
+    flush.console()
+    next
+  }
+  # Display success message
+  message(paste0("Data pulled for site ", site, ". \nElapsed time: ", 
+                 (proc.time()[3]-startTime[3])/60, " minutes"))
+  flush.console()
+  
+  ######################## Format data for modeling ########################
+  data_prep <- prep_metabolism(d = data, type = model_type, model = model_name,
+                               rm_flagged = list("Bad Data", "Questionable"),
+                               interval = "15 min",
+                               estimate_areal_depth = TRUE,
+                               retrieve_air_pres = TRUE)
+  # Display success message
+  message(paste0("Data formatted for site ", site, ". \nElapsed time: ", 
+                 (proc.time()[3]-startTime[3])/60, " minutes"))
+  flush.console()
+  
+  ############################ Model metabolism ############################
+  # If no discharge data, set poolK_600='none'
+  if (grepl("Discharge_m3s", data_prep$specs$missing_variables)){
+    message(paste0("Discharge data missing for site ", site, 
+                   ". Will use fit_metabolism with poolK_600='none'."))
+    flush.console()
+    model_fit <- fit_metabolism(data_prep, pool_K600 = "none")
+  } else {
+    # Otherwise, execute as normal
+    model_fit <- fit_metabolism(data_prep)
+  }
+  # Display success message
+  message(paste0("Metabolism modeled for site ", site, ". \nElapsed time: ", 
+                 (proc.time()[3]-startTime[3])/60, " minutes"))
+  flush.console()
+  
+  ############################ Save to file ############################
+  saveRDS(model_fit, file = paste0("./model_outputs/Metabolism_", site, ".RData"))
+  message(paste0("Model for site ", site, " saved to file. \nElapsed time: ", 
+                 (proc.time()[3]-startTime[3])/60, " minutes"))
+  flush.console()
+}
+
+# QAQC notes: run UT_REDB-up for a small length of time, lots of NA depth, 
+# estimates from full TS are negative
+
+ggplot(data = model_fit$predictions) +
+  geom_point(aes(x = date, y = ER)) +
+  geom_ribbon(aes(ymin = ER.lower, ymax = ER.upper, x = date))
+```
+
+```{r pull-NEON, eval = FALSE}
+# Load libraries --------------------------------------------------------------
+library(neonUtilities) # Built under R version 3.6.2
+# Since neonUtilities is an old build, we need to tell R to ignore warnings
+# thrown when downloading the NEON-water-quality localPressureDO package, 
+# otherwise the install will fail
+#Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = "true")
+#devtools::install_github(repo = "NEONScience/NEON-water-quality/localPressureDO")
+library(localPressureDO)
+library(streamMetabolizer)
+
+## Pull raw NEON dataset -----------------------------------------------------
+# Define sites of interest
+NEONsites <- c("ARIK")
+#NEONsites <- c("ARIK", "REDB", "PRIN", "MCDI", "KING", "HOPB", "GUIL", "CUPE", 
+#               "SYCA", "CARI", "BLDE", "MCRA", "MART")
+
+# Define parameters of interest
+params <- c("DP1.20288.001", "DP1.20053.001", #"DP1.20267.001", 
+            "DP1.20033.001")
+names(params) <- c("WaterQual", "Temp", #"GaugeHt", 
+                   "NO3")
+
+# Define start and end dates
+startdate <- "2019-01"
+enddate <- "2019-12"
+
+# Pull data from NEON
+for (i in seq_along(params)){
+  # Set dpID to i-th parameter
+  dpID <- params[i]
+  
+  # Pull NEON data for parameter, saving the data to the variable name from
+  # names(params)
+  assign(names(dpID), 
+         value = loadByProduct(dpID = dpID, site = NEONsites, 
+                               startdate = startdate, enddate = enddate, 
+                               package = "basic"))
+}
+
+## Correct dissolved oxygen percent saturation -------------------------------
+# Pull DO-related products for sites of interest
+DOdata <- getAndFormatData(siteName = NEONsites, startDate = startdate, 
+                           endDate = enddate)
+# Calculate DO percent saturation at local using the Benson-Krause equation,
+# Which is the same method as used by the USGS since 2011
+DOcalcd <- calcBK_eq(DOdata)
+# Trim DOcalcd dataset
+DOcalcd <- 
+  DOcalcd %>%
+  select(horizontalPosition, startDateTime, siteID, 
+         dissolvedOxygenSatCorrected)
+# Remove DO percent saturation from WaterQual
+# Merge corrected DO percent saturation with WaterQual dataset
+WaterQual$waq_instantaneous <- 
+  right_join(WaterQual$waq_instantaneous, DOcalcd, 
+             by = c("siteID", "startDateTime", "horizontalPosition"))
+
+# Save raw NEON datafiles, with corrected DO sat, to external harddrive -------
+#saveRDS(WaterQual, 
+#        file = "/Volumes/Ext001_MCK/Datasets/CAREER_NEON/WaterQual.RData")
+#saveRDS(Temp, file = "/Volumes/Ext001_MCK/Datasets/CAREER_NEON/Temp.RData")
+#saveRDS(NO3, file = "/Volumes/Ext001_MCK/Datasets/CAREER_NEON/NO3.RData")
+
+# Load raw NEON datafiles from external harddrive
+#WaterQual <- 
+#  readRDS(file = "/Volumes/Ext001_MCK/Datasets/CAREER_NEON/WaterQual.RData")
+#Temp <- readRDS(file = "/Volumes/Ext001_MCK/Datasets/CAREER_NEON/Temp.RData")
+#NO3 <- readRDS(file = "/Volumes/Ext001_MCK/Datasets/CAREER_NEON/NO3.RData")
+
+# Create metadata tibble for site information
+# May be unneeded - consult the CAREER site list metadata file
+WQ_meta <- 
+  WaterQual$sensor_positions_20288 %>%
+  select(siteID, referenceDescription, referenceStart, referenceEnd,
+         referenceLatitude, referenceLongitude, referenceElevation) %>%
+  # Filter to active stations
+  filter(referenceEnd == "")
+# Add horizontal position column
+WQ_meta$horizontalPosition <- c("S1", "S2", "S2")
+
+# S1 = upstream, S2 = downstream
+WQ_data <- 
+  WaterQual$waq_instantaneous %>%
+  select(siteID, horizontalPosition, startDateTime, specificConductance, 
+         dissolvedOxygen, dissolvedOxygenSatCorrected, pH, chlorophyll, 
+         turbidity) %>%
+  mutate(horizontalPosition = recode(horizontalPosition, "101" = "S1", 
+                                     "102" = "S2"))
+# Add longitude to WQ_data for use in solartime conversion
+WQ_data <- 
+  right_join(WQ_data, WQ_meta %>% select(horizontalPosition, referenceLongitude), 
+             by = "horizontalPosition")
+
+# Convert datetime to chron solartime -----------------------------------------
+# Convert to UTC timezone
+WQ_data$startDateTime <- with_tz(WQ_data$startDateTime, tz = "UTC")
+# Convert from UTC to solar time using streamMetabolizer
+WQ_data$solarTime <- 
+  convert_UTC_to_solartime(WQ_data$startDateTime, 
+                           longitude = WQ_data$referenceLongitude)
+
+# Save trimmed WQ_data to local folder ----------------------------------------
+saveRDS(WQ_data, file = "./data/NEON_formatted/NEON_WaterQual.RData")
+saveRDS(WQ_meta, file = "./data/NEON_formatted/NEON_WaterQualMeta.RData")
+
+# Stack to format for 2-station metabolism, then save formatted stacked file
+l
+
+```
+
+```{r NEON-reaeration, eval=FALSE}
+# Load libraries --------------------------------------------------------------
+#library(neonUtilities) # Built under R version 3.6.2
+# Since neonUtilities is an old build, we need to tell R to ignore warnings
+# thrown when downloading the NEON-water-quality localPressureDO package, 
+# otherwise the install will fail
+#Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS = "true")
+#devtools::install_github(repo = "NEONScience/NEON-reaeration/reaRate")
+library(reaRate)
+
+# Download NEON reaeration data product
+rea_data <- def.format.reaeration(site = NEONsites)
 ```
 
 # Methods
 
 ### Notes on StreamPULSE Data Availability for Metabolism Modeling
 
-Arikaree River, CO_ARIK-down
+Arikaree River, CO_ARIK-down (first pass done)
 
 - Sampled on 2017-07-11 and 2019-05-24
 - CO_ARIK-down has much more data coverage than CO_ARIK-up
@@ -197,13 +398,14 @@ Arikaree River, CO_ARIK-down
   - Depth measurements run from 2019-01-01 to 2019-06-01
   - DO measurements spotty between 2019-01-01 to 2019-06-01, most coverage between 2019-04-18 to 2019-05-20
   
-Red Butte Creek, UT_REDB-up
 
-Pringle Creek, TX_PRIN-up
+Red Butte Creek, UT_REDB-up (first pass done)
 
-McDiffet Creek, KS_MCDI-up
+Pringle Creek, TX_PRIN-up (first pass done)
 
-Kings Creek, KS_KING-up
+McDiffet Creek, KS_MCDI-up (first pass done)
+
+Kings Creek, KS_KING-up (retry seperately, something weird happened)
 
 Hubbard Brook Forest, NH_HBF
 
@@ -234,6 +436,7 @@ Martha Creek, WA_MART-up
 
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+##### Plot CAREER Site Map #####
 # Pull state map data
 world.map <- map_data("world")
 states.map <- map_data("state")
@@ -257,11 +460,42 @@ ggplot() +
   geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
              shape = 21, 
              color = "black", size = 4, stroke = 1) +
-  coord_fixed(1.3, xlim = c(-30,-180), ylim = c(10, 75)) +
+  coord_fixed(1.3, xlim = c(-180,-30), ylim = c(10, 75)) +
   # Theme adjustments
   theme_nothing() +
   theme(panel.background = element_rect(color = "black", fill = "white")) +
   scale_fill_manual(values=wes_palette(n=4, name="FantasticFox1")) +
+  guides(fill = FALSE)
+```
+
+```{r plotMapLINXII, fig.cap="Map of StreamPULSE (n = 12), NEON (n = 13), and LINXII (n = 49) study sites used in this analysis. Blue = StreamPULSE site, yellow = NEON site, orange = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+##### Plot LINXII and CAREER Site Map #####
+
+# Merge sites_LINXII with sites
+sites <- full_join(sites, sites_LINXII) %>% filter(Source != "Other")
+
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
+             shape = 21, size = 4, stroke = 0.5, color = "black") +
+  coord_fixed(1.3, xlim = c(-160,-60), ylim = c(15, 70)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
   guides(fill = FALSE)
 ```
 
@@ -385,7 +619,7 @@ grid.arrange(c,d, ncol = 2)
 #  theme(legend.position = "none")
 ```
 
-```{r plotNProcessRates, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood; where rock includes rock flock, rock cobble, rock scrape, bedrock scrape, pebble, and bedrock; sediment includes clay) at each study site. Vertical black lines extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range. Note that y-axis is on a log scale.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 10, fig.pos="center"}
+```{r plotNProcessRates, eval = F, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood; where rock includes rock flock, rock cobble, rock scrape, bedrock scrape, pebble, and bedrock; sediment includes clay) at each study site. Vertical black lines extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range. Note that y-axis is on a log scale.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 10, fig.pos="center"}
 Nprocess_plot <- Nprocess
   # Group rock cobble and rock flock into rock category
 Nprocess_plot$Substrate <- recode(Nprocess_plot$Substrate, "Rock Flock" = "Rock", 
@@ -416,7 +650,7 @@ ggplot(data = Nprocess_plot, aes(x = SiteName, y = ProcessRate)) +
   scale_fill_brewer(palette = 2, type = "qual")
 ```
 
-```{r plotNProcessRates-flip, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood; where rock includes rock flock, rock cobble, rock scrape, bedrock scrape, pebble, and bedrock; sediment includes clay) at each study site. Vertical black lines extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range. Note that y-axis is on a log scale.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=10, fig.width = 5, fig.pos="center"}
+```{r plotNProcessRates-flip, eval = F, fig.cap="Nitrogen fixation and denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood; where rock includes rock flock, rock cobble, rock scrape, bedrock scrape, pebble, and bedrock; sediment includes clay) at each study site. Vertical black lines extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range. Note that y-axis is on a log scale.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=10, fig.width = 5, fig.pos="center"}
 ggplot(data = Nprocess_plot, aes(x = SiteName, y = ProcessRate)) +
   stat_boxplot(geom = "errorbar", width = 0, height = 0) +
   geom_point(aes(fill = Substrate, shape = Substrate), size = 4) +

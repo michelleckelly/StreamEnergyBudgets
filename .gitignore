@@ -3,7 +3,7 @@
 *.DS_Store
 /Data/.DS_Store
 *.Rproj
-*.Rapp.history
+.Rapp.history
 *Icon?
 
 # Ignore Rmd default cache directory
@@ -14,3 +14,7 @@
 *.knit.md
 *.tmp
 .Rproj.user
+
+# Ignore large RData files and zip files
+*.RData
+*.zip
