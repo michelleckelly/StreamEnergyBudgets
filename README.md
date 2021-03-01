@@ -3,4 +3,4 @@
 
 This repo houses the source code for this talk.
 
-[Check out the website for the project here.](https://michelleckelly.github.io/CAREER_NutrientRegimes/)
+[Check out the website for the project here.](https://michelleckelly.github.io/StreamEnergyBudgets)
