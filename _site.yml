@@ -3,19 +3,19 @@ title: "Are anaerobic energy-generation pathways significant contributors to str
 output_dir: "docs"
 include: ["import.R"]
 exclude: ["docs.txt", "*.csv"]
-base_url: https://michelleckelly.github.io/CAREER_NutrientRegimes/
-repository_url: https://github.com/michelleckelly/CAREER_NutrientRegimes/
+base_url: https://michelleckelly.github.io/StreamEnergyBudgets/
+repository_url: https://github.com/michelleckelly/StreamEnergyBudgets/
 creative_commons: CC BY
 twitter:
   site: "@michelleckelly_"
 navbar:
   right:
     - text: "Analysis"
-      href: AnaerobicEnergy_Head.html
+      href: StreamEnergyBudgets_Head.html
     - text: "Source Code"
-      href: https://github.com/michelleckelly/CAREER_NutrientRegimes/blob/master/CAREER_DefiningNutrientRegimes.Rmd
+      href: https://github.com/michelleckelly/StreamEnergyBudgets/blob/master/StreamEnergyBudgets_Head.Rmd
     - icon: fab fa-github
-      href: https://github.com/michelleckelly/CAREER_NutrientRegimes/
+      href: https://github.com/michelleckelly/StreamEnergyBudgets/
 output:
   distill::distill_article:
     css: styles.css
