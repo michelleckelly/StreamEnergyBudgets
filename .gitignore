@@ -5,6 +5,7 @@
 *.Rproj
 .Rapp.history
 *Icon?
+*Icon
 
 # Ignore Rmd default cache directory
 /cache/

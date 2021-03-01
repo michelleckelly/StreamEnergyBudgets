@@ -39,15 +39,78 @@ library(maps)
 library(wesanderson)
 library(corrplot)
 library(svMisc)
-
-
+library(ggfortify)
+library(AppliedPredictiveModeling)
+library(caret)
+options(digits=3) # Change rounding to 3 digits
 ```
 
-```{r load_compiledStreamPULSE, echo = FALSE, message = FALSE, warning = FALSE}
-############## Load site attributes data ############## 
+```{r load_CAREERsites, echo = FALSE, message = FALSE, warning = FALSE}
 sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
+```
 
-############## Load and clean StreamPULSE metabolism data ############## 
+```{r energyCalculation, echo = FALSE}
+# Denitrification energy calculation
+convertDenit <- function(denitData_mgNm2hr){
+  denitData_mgNm2hr * 28.4 * 10 / 1000 / 14 / 2
+}
+# Ecosystem respiration energy calculation
+convertER <- function(ERData_gO2m2d){
+  ERData_gO2m2d * 29.9 * 4 * (2/32) / 24
+}
+```
+
+```{r load_LINXII, echo = FALSE, message = FALSE, warning = FALSE}
+# Site information and denitrification rates
+LINXII <- 
+  read_csv(file = "data/LINXII_Denit_Mulholland2009.csv", na = "NaN") %>% 
+  filter(!is.na(DenitrificationRate_m))
+LINXII_sites <- LINXII %>% select(State, SiteName, Source, LandUse, BIOME, 
+                                  Latitude, Longitude, DrainageArea_ha)
+
+# Convert denitrification rate per meter to v_fden 
+# (see Mulholland 2009 methods)
+LINXII$vfden_cms <- (LINXII$Discharge_Ls / LINXII$Width_m) *
+  LINXII$DenitrificationRate_m * 0.1
+# Convert v_fden to U_den in mg-N m-2 hr-1
+## NOTE: MULHOLLAND ET AL 2009 SAYS to use 3.6 as the conversion factor -
+## this is incorrect. The conversion factor should be 36 with these units
+## This fix gives data that matches Figure 4 from Mulholland 2009 exactly
+LINXII$Denit_mgNm2hr <- (LINXII$vfden_cms * LINXII$NO3_ugNL) * 36
+
+# Metabolism
+LINXII_met <- read_csv(file = "data/LINXII_Metab_Bernot2010.csv", na = "NaN")
+# Merge
+LINXII <- left_join(LINXII %>% select(-Latitude, -Longitude, -DrainageArea_ha,
+                                      -vfden_cms),
+          LINXII_met %>% select(-Latitude, -Longitude, -DrainageArea_ha))
+# Remove
+rm(LINXII_met)
+
+# Run calculation
+LINXII$EnergyDenit_kCalm2hr <- convertDenit(LINXII$Denit_mgNm2hr)
+LINXII$EnergyER_kCalm2hr <- convertER(LINXII$ER_gO2m2d)
+LINXII$EnergyTot_kCalm2hr <- LINXII$EnergyDenit_kCalm2hr + LINXII$EnergyER_kCalm2hr
+LINXII$EnergyDenit_percent <- LINXII$EnergyDenit_kCalm2hr / LINXII$EnergyTot_kCalm2hr * 100
+LINXII$EnergyER_percent <- LINXII$EnergyER_kCalm2hr / LINXII$EnergyTot_kCalm2hr * 100
+
+# Create numeric dataset for modeling
+LINXII_numeric <- LINXII %>% 
+  select(-Source, -NOTES, -SiteName, -StudyDate_N15, -StudyDate_Metab) %>%
+  mutate_if(is.character, as.factor)
+# Dummy variables
+dummies <- dummyVars( ~., data = LINXII_numeric)
+LINXII_numeric <- data.frame(predict(dummies, newdata = LINXII_numeric))
+# Add back in locations
+LINXII_numeric$Latitude <- LINXII_sites$Latitude
+LINXII_numeric$Longitude <- LINXII_sites$Longitude
+LINXII_numeric <- LINXII_numeric %>% na.omit()
+# Remove near zero variance columns
+nzv <- nearZeroVar(LINXII_numeric)
+LINXII_numeric <- LINXII_numeric[, -nzv]
+```
+
+```{r load_StreamPULSEmodels, echo = FALSE, message = FALSE, warning = FALSE}
 # Create list of file names using site ID information
 fileRegEx <- unique(paste0("predictions_",
                           sites$StreamPULSE_SiteID,".*rds"))
@@ -103,9 +166,9 @@ modelResults_DOY <-
             NEP_sd = sd(GPP - abs(ER), na.rm = T))
 
 ############## Load and clean StreamPULSE nutrient data ############## 
+```
 
-
-
+```{r load_CAREERdata, echo = FALSE, message = FALSE, warning = FALSE}
 ############## Load nutrient process rates data ############## 
 Nprocess <- read_csv(file = "data/CAREER_RatesTable.csv")
 # Unite site code row with Nprocess table
@@ -130,24 +193,6 @@ Nprocess$Process <- factor(Nprocess$Process,
          levels = c("N fixation", "UnamendedDenit", "Amended"),
          labels = c("Nitrogen Fixation", "Unamended Denitrification", 
                     "Amended Denitrification"))
-
-############## Load LINXII data ############## 
-sites_LINXII <- read_csv(file = "data/LINXII_Denit_Mulholland2009.csv",
-                         na = "NaN") %>% 
-  filter(!is.na(DenitrificationRate_m))
-
-# Widen data
-#Nprocess_w <- 
-#  Nprocess %>%
-#  pivot_wider(names_from = Process, values_from = c(ProcessRate, SE))
-
-# Subset only rates measured on sediment, wood, or rock
-#Nprocess_subst <- 
-#  Nprocess_w %>%
-#  filter(Substrate %in% c("sediment", "rock", "wood")) %>%
-#  pivot_wider(names_from = Substrate, 
-#              values_from = c(ProcessRate_UnamendedDenit, ProcessRate_NFixation, 
-#                              SE_UnamendedDenit, SE_NFixation))
 ```
 
 ```{r model_StreamPULSE, eval = FALSE}
@@ -381,124 +426,6 @@ library(reaRate)
 rea_data <- def.format.reaeration(site = NEONsites)
 ```
 
-# Methods
-
-### Notes on StreamPULSE Data Availability for Metabolism Modeling
-
-Arikaree River, CO_ARIK-down (first pass done)
-
-- Sampled on 2017-07-11 and 2019-05-24
-- CO_ARIK-down has much more data coverage than CO_ARIK-up
-- 2017 metabolism
-  - Depth measurements run from 2017-01-01 to 2017-06-01
-  - Most coverage of DO is 2017-03-26 to 2017-05-26
-- 2018 metabolism
-  - Good coverage across full year (except for nitrate)
-- 2019 metabolism
-  - Depth measurements run from 2019-01-01 to 2019-06-01
-  - DO measurements spotty between 2019-01-01 to 2019-06-01, most coverage between 2019-04-18 to 2019-05-20
-  
-
-Red Butte Creek, UT_REDB-up (first pass done)
-
-Pringle Creek, TX_PRIN-up (first pass done)
-
-McDiffet Creek, KS_MCDI-up (first pass done)
-
-Kings Creek, KS_KING-up (retry seperately, something weird happened)
-
-Hubbard Brook Forest, NH_HBF
-
-- Sampled on 2018-08-07
-
-Wednesday Hill Brook, NH_WHB
-
-- Sampled on 2018-08-09
-
-Lower Hop Brook, MA_HOPB-down
-
-Rio Guilarte, 	PR_GUIL-up
-
-- These rates and forward not yet calculated
-
-Rio Cupeyes, PR_CUPE-up
-
-Sycamore Creek, AZ_SYCA-up
-
-Caribou Creek, AK_CARI-up
-
-Blacktail Deer Creek, WY_BLDE-up
-
-McRae Creek, OR_MCRA-up
-
-Martha Creek, WA_MART-up
-
-
-
-```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
-##### Plot CAREER Site Map #####
-# Pull state map data
-world.map <- map_data("world")
-states.map <- map_data("state")
-
-# Plot map
-ggplot() +
-  # State and country outlines
-  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
-  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
-  geom_polygon(data = subset(world.map, region == "USA"), 
-               aes(x = long, y = lat, group = group), 
-               color = "black", size = 0.2, fill = NA) +
-  # Location markers and labels
-  geom_label_repel(data = sites, aes(x = Longitude, y = Latitude, 
-                                     label = SiteName), 
-                   box.padding = 1, size = 4, nudge_x = 0.01, 
-                   segment.size = 0.5, segment.color = "black", 
-                   label.size = 0.6) +
-  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
-             shape = 21, 
-             color = "black", size = 4, stroke = 1) +
-  coord_fixed(1.3, xlim = c(-180,-30), ylim = c(10, 75)) +
-  # Theme adjustments
-  theme_nothing() +
-  theme(panel.background = element_rect(color = "black", fill = "white")) +
-  scale_fill_manual(values=wes_palette(n=4, name="FantasticFox1")) +
-  guides(fill = FALSE)
-```
-
-```{r plotMapLINXII, fig.cap="Map of StreamPULSE (n = 12), NEON (n = 13), and LINXII (n = 49) study sites used in this analysis. Blue = StreamPULSE site, yellow = NEON site, orange = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
-##### Plot LINXII and CAREER Site Map #####
-
-# Merge sites_LINXII with sites
-sites <- full_join(sites, sites_LINXII) %>% filter(Source != "Other")
-
-# Pull state map data
-world.map <- map_data("world")
-states.map <- map_data("state")
-
-# Plot map
-ggplot() +
-  # State and country outlines
-  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
-  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
-  geom_polygon(data = subset(world.map, region == "USA"), 
-               aes(x = long, y = lat, group = group), 
-               color = "black", size = 0.2, fill = NA) +
-  # Location markers
-  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
-             shape = 21, size = 4, stroke = 0.5, color = "black") +
-  coord_fixed(1.3, xlim = c(-160,-60), ylim = c(15, 70)) +
-  # Theme adjustments
-  theme_nothing() +
-  theme(panel.background = element_rect(color = "black", fill = "white")) +
-  scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
-  guides(fill = FALSE)
-```
-
 ```{r plotNEPmonthlymean, eval = F, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and calculated mean monthly NEP (B) for the period of record. Shaded ribbons (B) represent standard deviation of NEP.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
 # Plot of DOY vs GPP or ER, faceted by site
 a <- 
@@ -674,7 +601,7 @@ ggplot(data = Nprocess_plot, aes(x = SiteName, y = ProcessRate)) +
   coord_flip()
 ```
 
-```{r correlations, fig.cap="Correlations between predictor variables, computed using Pearson correlation", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 5, fig.pos="center"}
+```{r correlations, fig.cap="Correlations between predictor variables, computed using Pearson correlation", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 5, fig.pos="center", eval = F}
 # Subset only rates measured on sediment or rock, seperate into columns, 
 # Get rid of non-numeric columns
 corrmatrix <- 
@@ -734,6 +661,339 @@ ggplot(data = Nprocess) +
   # Color scales
   #scale_color_brewer(palette = 2, type = "qual")
 ```
+
+# Methods
+
+```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+##### Plot CAREER Site Map #####
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers and labels
+  geom_label_repel(data = sites, aes(x = Longitude, y = Latitude, 
+                                     label = SiteName), 
+                   box.padding = 1, size = 4, nudge_x = 0.01, 
+                   segment.size = 0.5, segment.color = "black", 
+                   label.size = 0.6) +
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
+             shape = 21, 
+             color = "black", size = 4, stroke = 1) +
+  coord_fixed(1.3, xlim = c(-180,-30), ylim = c(10, 75)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  scale_fill_manual(values=wes_palette(n=4, name="FantasticFox1")) +
+  guides(fill = FALSE)
+```
+
+```{r plotMapLINXII, fig.cap="Map of StreamPULSE (n = 12), NEON (n = 13), and LINXII (n = 49) study sites used in this analysis. Blue = StreamPULSE site, yellow = NEON site, orange = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+##### Plot LINXII and CAREER Site Map #####
+
+# Merge sites_LINXII with sites
+sites <- full_join(sites, LINXII_sites) %>% filter(Source != "Other")
+
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
+             shape = 21, size = 4, stroke = 0.5, color = "black") +
+  coord_fixed(1.3, xlim = c(-160,-60), ylim = c(15, 70)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) #+
+  scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
+  guides(fill = FALSE)
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  # Location markers
+  #geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
+  #           shape = 21, size = 4, stroke = 0.5, color = "black") +
+  geom_point(data = LINXII_numeric, aes(x = Longitude, y = Latitude, 
+                                        fill = EnergyDenit_percent,
+                                        size = EnergyDenit_percent), 
+             shape = 21, stroke = 0.5, color = "black", position = "jitter") +
+  coord_fixed(1.3, xlim = c(-130,-60), ylim = c(15, 50)) +
+  scale_size_identity(aesthetics = "size") +
+  # Theme adjustments
+  #theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) 
+```
+
+## LINX II Dataset
+
+Denitrification rates (as $k_{den}$, $m^{-1}$) were obtained from Mulholland et al. [-@mulholland2009] appendix. Rates were then converted to areal denitirification rates using conversion steps outlined in the methods of Mulholland et al. [-@mulholland2009], where $k_{denT}$ = denitrification rate per unit time ($d^{-1}$), $v$ = average water velocity ($cm ~ s^{-1}$), $v_{fden}$ = denitrification uptake velocity ($cm ~ s^{-1}$), $Q$ = discharge ($L ~ s^{-1}$), $w$ = average stream wetted width ($m$),$U_{den}$ = areal denitirification rate ($mg ~ m^{-2} ~ hr^{-1}$), $C$ = ambient nitrate concentration (ug-N $L^{-1}$).
+
+$$k_{denT} = k_{den} * v * 864$$
+
+$$v_{fden} = (Q/w) * k_{den} * 0.1$$
+
+$$U_{den} = (v_{fden} * C) * 36$$
+
+Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information. 
+
+## Conversion from Process Rate to Energy Production
+
+Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to energy production rates (kCal $m^{-2} ~ hr^{-1}$) using Gibbs free energy ($\Delta G$) values and molar conversion factors from the balanced chemical reactions of each process.
+
+![Gibbs free energy ($\Delta G$) produced by selected reduction and oxidation reactions in natural waters [at pH = 7; see @stumm_aquatic_1996 pp. 474, 477].](images/Table8-7_Handwritten.jpeg)
+
+![Conversion of denitrification from nitrogen production units of mg-N $m^{-2} ~ hr^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/Denitrification.jpeg)
+
+![Conversion of aerobic respiration from oxygen production units of g-$O_2 ~ m^{-2} ~ day^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/AerobicResp.jpeg)
+
+# Results
+
+```{r DenitRatevsPercentTotalNRG, fig.cap="LINXII streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=5, fig.pos="H"}
+ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent, 
+                          fill = ER_gO2m2d)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  # Label with site names
+  #geom_text_repel(label = LINXII$SiteName, size = 3) + 
+  # Add data points
+  geom_point(size = 3, shape = 21) +
+  # Theme adjustments
+  theme_classic() +
+  labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
+       y = expression("Percentage of total energy released via denitrification (%)"),
+       fill = expression("|ER| (g-"*O[2] ~ m^{-2} ~ d^{-1} * ")")) +
+  theme(panel.border = element_rect(color = "black", fill = NA),
+        axis.text = element_text(color = "black"),
+        legend.position = c(0.2, 0.8),
+        legend.background = element_rect(color = "black", fill = NA))
+
+# Stats
+cor.test(x = LINXII$ER_gO2m2d, y = LINXII$EnergyDenit_percent, 
+         method = "pearson", use = "complete.obs")
+```
+
+```{r NO3vsPercentTotalNRG, fig.cap="NO3- is an even better predictor of the percentage of total released energy via denitrification than it is of denitrification rate for LINXII streams.", fig.height=5, fig.pos="H"}
+a <- 
+  ggplot(data = LINXII, 
+       aes(x = NO3_ugNL, y = EnergyDenit_percent)) +
+  geom_smooth(method = "lm", color = "black") +
+  ggpubr::stat_cor() +
+  # Label with site names
+  #geom_text_repel(label = LINXII$SiteName, size = 3) + 
+  # Add data points
+  geom_point(size = 3, shape = 21) +
+  # Theme adjustments
+  theme_classic() +
+  labs(tag = "A",
+       x = expression("NO3- (ug-N" ~ L^{-1} * ")"), 
+       y = expression("Percentage of total energy released via denitrification (%)")) +
+  theme(panel.border = element_rect(color = "black", fill = NA),
+        axis.text = element_text(color = "black"))
+
+b <- 
+  ggplot(data = LINXII, 
+       aes(x = NO3_ugNL, y = Denit_mgNm2hr)) +
+  geom_smooth(method = "lm", color = "black") +
+  ggpubr::stat_cor() +
+  # Label with site names
+  #geom_text_repel(label = LINXII$SiteName, size = 3) + 
+  # Add data points
+  geom_point(size = 3, shape = 21) +
+  # Theme adjustments
+  theme_classic() +
+  labs(tag = "B",
+       x = expression("NO3- (ug-N" ~ L^{-1} * ")"), 
+       y = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")")) +
+  theme(panel.border = element_rect(color = "black", fill = NA),
+        axis.text = element_text(color = "black"))
+
+grid.arrange(a, b, nrow = 1)
+```
+
+```{r predictive Denit %, eval = F}
+# (change this section if using a different dataframe)
+dataFrameName <- LINXII_numeric %>% select (-EnergyER_percent, -Denit_mgNm2hr,
+                                            -EnergyDenit_kCalm2hr) 
+# Remove percent 
+# of total energy  budget from ER as this will be directly correlated with % 
+# of total from denitrification, remove denitrification rate 
+
+# Explore correlation between predictors and denitrification %
+featurePlot(x = dataFrameName, 
+            y = dataFrameName$EnergyDenit_percent, 
+            plot = "scatter", 
+            type = c("p", "smooth"),
+            span = .5)
+
+# Explore correlation between predictors and ER %
+featurePlot(x = dataFrameName, 
+            y = dataFrameName$EnergyER_percent, 
+            plot = "scatter", 
+            type = c("p", "smooth"),
+            span = .5, interactive = T)
+
+# Pre-process data
+preproc <- preProcess(dataFrameName)
+transfor <- predict(preproc, newdata = dataFrameName)
+# Split the data into predictors and response 
+response <- dataFrameName$EnergyDenit_percent
+predictors <- dataFrameName %>% select(-EnergyDenit_percent)
+
+# Check for highly correlated predictors and remove highly correlated 
+# predictors using a cutoff value of 85%
+highCorr <-findCorrelation(cor(predictors), cutoff = 0.85)
+names(predictors[highCorr])
+predictors <- predictors[-highCorr]
+
+# Split data into training and testing
+set.seed(999)
+trainIndex <- createDataPartition(dataFrameName$EnergyDenit_percent, 
+                                  p = .80, list = FALSE)
+predictors_train <- predictors[trainIndex,]
+predictors_test <- predictors[-trainIndex,]
+response_train <- response[trainIndex]
+response_test <- response[-trainIndex]
+
+# Set up a 10 fold repeated CV for all models
+fitControl <- trainControl(method = "repeatedcv", number = 3,
+                           ## repeated 3 times for testing
+                           repeats = 3)
+
+# Train Neural network, MARS, SVM, and KNN models
+## Neural network
+nnetGrid <- expand.grid(.decay = c(0, 0.01, .1),
+                        .size = c(1:30),
+                        .bag = FALSE)
+set.seed(999)
+nnetModel <- train(x = predictors_train, y = response_train, method = "avNNet",
+                  tuneGrid = nnetGrid, linout = TRUE, trace = FALSE,
+                  MaxNWts = 30 * (ncol(predictors_train) + 1) + 30 + 1,
+                  maxit = 500)
+plot(nnetModel, main = "Neural Net")
+# Evaluate test set performance
+nnetPred <- predict(nnetModel, predictors_test)
+postResample(pred = nnetPred, obs = response_test)
+
+## MARS
+set.seed(999)
+marsModel <- train(x = predictors_train, y = response_train, method = "earth", 
+                   tuneGrid = expand.grid(.degree = 1:2, .nprune = 2:30),
+                   trControl = fitControl)
+plot(marsModel, main = "MARS")
+# Evaluate test set performance
+marsPred <- predict(marsModel, newdata = predictors_test)
+postResample(pred = marsPred, obs = response_test)
+
+## SVM
+library(kernlab)
+# Choosing to evaluate a radial SVM
+set.seed(999)
+svmRTuned <- train(x = predictors_train, y = response_train, method = "svmRadial",
+                   tuneLength = 9, trControl = fitControl)
+plot(svmRTuned, main = "Radial SVM")
+# Evaluate test set performance
+svmRPred <- predict(svmRTuned, newdata = predictors_test)
+postResample(pred = svmRPred, obs = response_test)
+
+## KNN
+set.seed(999)
+knnTune <- train(x = predictors_train, y = response_train, method = "knn", 
+                 tuneGrid = data.frame(.k = 1:30), trControl = fitControl)
+plot(knnTune, main = "KNN")
+# Evaluate test set performance
+knnPred <- predict(knnTune, newdata = predictors_test)
+postResample(pred = knnPred, obs = response_test)
+
+## Elastic net
+enetGrid <- expand.grid(.lambda = c(1E-6, 0.00001, 0.0001, 0.001, 0.1, 0.5, 1), 
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(999)
+enetTune <- train(x = predictors_train, y = response_train, method = "enet", 
+                  tuneGrid = enetGrid, trControl = fitControl)
+plot(enetTune, main = "Elastic Net Regression")
+# Evaluate test set performance
+enetPredic <- predict(enetTune, predictors_test)
+postResample(pred = enetPredic, obs = response_test)
+
+
+#defaultSummary(data.frame(obs = testResponse, pred = enetPredic))
+# f. which predictors are most important?
+plot(varImp(enetTune), 10, 
+     main = "Importance of Predictors according to Linear Elastic Net")
+
+# Explore predictor importance from best fit model (lowest RMSE)
+plot(varImp(marsModel), 5, 
+     main = "Importance of Predictors")
+```
+
+```{r PCA, fig.cap="Plots showing the first two principle components from PCA analysis of the assembled LINX II dataset. Plot A shows the first two principle components with points labeled with site names. Plot B shows the first two principle components with labeled eigenvectors overlaid.", fig.height=8, fig.width=5, fig.pos="H", eval = F}
+# Compute PCA, center and scale the data
+pcaModel <- prcomp(LINXII_numeric, center = TRUE, scale. = TRUE) 
+# Predict on data
+LINXII_PCA <- predict(pcaModel, LINXII_numeric)
+
+# Plot first 2 PCA scores in ggplot using ggfortify
+a <- 
+  autoplot(pcaModel, size = 2) +
+  # Label each point with the site
+  geom_text_repel(label = na.omit(LINXII)$State, size = 2.5) + 
+  # Adjust theme
+  theme_classic() +
+  labs(tag = "A") +
+  theme(axis.text = element_text(color = "black"),
+        panel.background = element_rect(color = "black"))
+
+b <- 
+  autoplot(pcaModel, size = 2, colour = "grey",
+           # Add eigenvectors
+           loadings = TRUE, loadings.label = TRUE, loadings.label.size = 3,
+           loadings.label.repel = TRUE, loadings.label.colour = "black") +
+  # Label each point with the site
+  #geom_text_repel(label = na.omit(LINXII)$SiteName, color = "grey") + 
+  # Adjust theme
+  theme_classic() +
+  labs(tag = "B") +
+  theme(axis.text = element_text(color = "black"),
+  panel.background = element_rect(color = "black"))
+
+grid.arrange(a, b, nrow = 2)
+```
+
+# Supplemental Images
+
+![Table 8.7 [@stumm_aquatic_1996 pp. 474].](images/Table8-7.jpeg)
+
+![Figure 8.14 [@stumm_aquatic_1996 pp. 477].](images/Figure8-14.jpeg){height=75%}
+
+# References
+
+
 
 ## Acknowledgments {.appendix}
 
