@@ -805,6 +805,15 @@ ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent,
         legend.background = element_rect(color = "black", fill = NA))
 
 # Stats
+quantile(LINXII$EnergyDenit_percent, na.rm = T)
+# Remove (0,0) datapoints
+LINXII %>% 
+  filter(Denit_mgNm2hr != 0) %>% 
+  summarise(mean(EnergyDenit_percent, na.rm = T))
+LINXII %>% 
+  filter(EnergyDenit_percent != 0 && Denit_mgNm2hr != 0) %>% 
+  summarise(mean(EnergyDenit_percent, na.rm = T))
+
 #cor.test(x = LINXII$ER_gO2m2d, y = LINXII$EnergyDenit_percent, 
 #         method = "pearson", use = "complete.obs")
 ```

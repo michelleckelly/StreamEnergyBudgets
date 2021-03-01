@@ -1,5 +1,5 @@
 name: "CAREER_NutrientRegimes"
-title: "Are anaerobic energy-generation pathways significant contributors to stream energy budgets?"
+title: "Stream Energy Budgets"
 output_dir: "docs"
 include: ["import.R"]
 exclude: ["docs.txt", "*.csv"]
