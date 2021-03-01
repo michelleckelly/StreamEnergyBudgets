@@ -1,5 +1,5 @@
 name: "CAREER_NutrientRegimes"
-title: "CAREER Project: Defining Nutrient Cycling Regimes"
+title: "Are anaerobic energy-generation pathways significant contributors to stream energy budgets?"
 output_dir: "docs"
 include: ["import.R"]
 exclude: ["docs.txt", "*.csv"]
@@ -11,7 +11,7 @@ twitter:
 navbar:
   right:
     - text: "Analysis"
-      href: CAREER_DefiningNutrientRegimes.html
+      href: AnaerobicEnergy_Head.html
     - text: "Source Code"
       href: https://github.com/michelleckelly/CAREER_NutrientRegimes/blob/master/CAREER_DefiningNutrientRegimes.Rmd
     - icon: fab fa-github

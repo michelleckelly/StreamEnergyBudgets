@@ -1,6 +1,6 @@
 ---
-title: "Defining Nutrient Cycling Regimes"
-description: A nationwide analysis of nitrogen fixation, denitrification, and ecosystem metabolism in streams.
+title: "Are anaerobic energy-generation pathways significant contributors to stream energy budgets?"
+description: "2021 SFS Annual Meeting: Original Talk"
 author: 
   - name: "Michelle Catherine Kelly"
     url: https://michelleckelly.github.io
@@ -15,17 +15,18 @@ author:
     url: http://marcarelli-lab.bio.mtu.edu/
     affiliation: Michigan Tech
 date: "`r format(Sys.Date())`"
+bibliography: bibliography.bib
 output:
   distill::distill_article:
     self_contained: false
     toc: true
-    toc_depth: 2
+    toc_float: true
+    toc_depth: 3
 ---
 
 # Abstract
 
-
--------
+# Introduction
 
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
 # Load libraries
@@ -480,7 +481,7 @@ b <-
 grid.arrange(a,b, ncol = 2)
 ```
 
-```{r plotNEPloess, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and annual trends in NEP over the period of record visualized using local polynomial regression fitting (LOESS, B). Shaded ribbons (B) represent 95% confidence interval on LOESS estimate.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
+```{r plotNEPloess, eval = F, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and annual trends in NEP over the period of record visualized using local polynomial regression fitting (LOESS, B). Shaded ribbons (B) represent 95% confidence interval on LOESS estimate.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
 # Plot of DOY vs GPP or ER, faceted by site
 c <- 
   ggplot(data = NULL) +
@@ -662,7 +663,9 @@ ggplot(data = Nprocess) +
   #scale_color_brewer(palette = 2, type = "qual")
 ```
 
-# Methods
+# Methods  
+
+## Site description  
 
 ```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 ##### Plot CAREER Site Map #####
@@ -723,35 +726,43 @@ ggplot() +
   coord_fixed(1.3, xlim = c(-160,-60), ylim = c(15, 70)) +
   # Theme adjustments
   theme_nothing() +
-  theme(panel.background = element_rect(color = "black", fill = "white")) #+
-  scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  #scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
   guides(fill = FALSE)
 
 # Plot map
-ggplot() +
+#ggplot() +
   # State and country outlines
-  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
-  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
-  geom_polygon(data = subset(world.map, region == "USA"), 
-               aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
+#  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+#               color = "grey", size = 0.2, fill = NA) +
+#  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+#               color = "grey", size = 0.2, fill = NA) +
+#  geom_polygon(data = subset(world.map, region == "USA"), 
+#               aes(x = long, y = lat, group = group), 
+#               color = "grey", size = 0.2, fill = NA) +
   # Location markers
   #geom_point(data = sites, aes(x = Longitude, y = Latitude, fill = Source), 
   #           shape = 21, size = 4, stroke = 0.5, color = "black") +
-  geom_point(data = LINXII_numeric, aes(x = Longitude, y = Latitude, 
-                                        fill = EnergyDenit_percent,
-                                        size = EnergyDenit_percent), 
-             shape = 21, stroke = 0.5, color = "black", position = "jitter") +
-  coord_fixed(1.3, xlim = c(-130,-60), ylim = c(15, 50)) +
-  scale_size_identity(aesthetics = "size") +
+#  geom_point(data = LINXII_numeric, aes(x = Longitude, y = Latitude, 
+#                                        fill = EnergyDenit_percent,
+#                                        size = EnergyDenit_percent), 
+#             shape = 21, stroke = 0.5, color = "black", position = "jitter") +
+#  coord_fixed(1.3, xlim = c(-130,-60), ylim = c(15, 50)) +
+#  scale_size_identity(aesthetics = "size") +
   # Theme adjustments
   #theme_nothing() +
-  theme(panel.background = element_rect(color = "black", fill = "white")) 
+#  theme(panel.background = element_rect(color = "black", fill = "white")) 
 ```
 
-## LINX II Dataset
+## Denitrification measurement
+
+## Metabolism modeling
+
+### Single-station
+
+### Two-station
+
+## LINX II dataset  
 
 Denitrification rates (as $k_{den}$, $m^{-1}$) were obtained from Mulholland et al. [-@mulholland2009] appendix. Rates were then converted to areal denitirification rates using conversion steps outlined in the methods of Mulholland et al. [-@mulholland2009], where $k_{denT}$ = denitrification rate per unit time ($d^{-1}$), $v$ = average water velocity ($cm ~ s^{-1}$), $v_{fden}$ = denitrification uptake velocity ($cm ~ s^{-1}$), $Q$ = discharge ($L ~ s^{-1}$), $w$ = average stream wetted width ($m$),$U_{den}$ = areal denitirification rate ($mg ~ m^{-2} ~ hr^{-1}$), $C$ = ambient nitrate concentration (ug-N $L^{-1}$).
 
@@ -761,9 +772,9 @@ $$v_{fden} = (Q/w) * k_{den} * 0.1$$
 
 $$U_{den} = (v_{fden} * C) * 36$$
 
-Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information. 
+Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information.  
 
-## Conversion from Process Rate to Energy Production
+## Conversion from Process Rate to Energy Production  
 
 Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to energy production rates (kCal $m^{-2} ~ hr^{-1}$) using Gibbs free energy ($\Delta G$) values and molar conversion factors from the balanced chemical reactions of each process.
 
@@ -775,7 +786,7 @@ Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to
 
 # Results
 
-```{r DenitRatevsPercentTotalNRG, fig.cap="LINXII streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=5, fig.pos="H"}
+```{r DenitRatevsPercentTotalNRG, fig.cap="LINX II streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=5, fig.width=5, fig.pos="H"}
 ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent, 
                           fill = ER_gO2m2d)) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
@@ -794,11 +805,11 @@ ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent,
         legend.background = element_rect(color = "black", fill = NA))
 
 # Stats
-cor.test(x = LINXII$ER_gO2m2d, y = LINXII$EnergyDenit_percent, 
-         method = "pearson", use = "complete.obs")
+#cor.test(x = LINXII$ER_gO2m2d, y = LINXII$EnergyDenit_percent, 
+#         method = "pearson", use = "complete.obs")
 ```
 
-```{r NO3vsPercentTotalNRG, fig.cap="NO3- is an even better predictor of the percentage of total released energy via denitrification than it is of denitrification rate for LINXII streams.", fig.height=5, fig.pos="H"}
+```{r NO3vsPercentTotalNRG, eval = F, fig.cap="NO3- is an even better predictor of the percentage of total released energy via denitrification than it is of denitrification rate for LINXII streams.", fig.height=5, fig.pos="H"}
 a <- 
   ggplot(data = LINXII, 
        aes(x = NO3_ugNL, y = EnergyDenit_percent)) +
@@ -985,19 +996,16 @@ b <-
 grid.arrange(a, b, nrow = 2)
 ```
 
+# Discussion
+
 # Supplemental Images
 
-![Table 8.7 [@stumm_aquatic_1996 pp. 474].](images/Table8-7.jpeg)
+![Table 8.7. from Stumm and Morgan 1996, page 474.[@stumm_aquatic_1996 pp. 474].](images/Table8-7.jpeg)
 
-![Figure 8.14 [@stumm_aquatic_1996 pp. 477].](images/Figure8-14.jpeg){height=75%}
-
-# References
-
-
+![Figure 8.14. from Stumm and Morgan 1996, page 477.[@stumm_aquatic_1996 pp. 477].](images/Figure8-14.jpeg){height=75%}
 
 ## Acknowledgments {.appendix}
 
 We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.
 
 Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 
-
