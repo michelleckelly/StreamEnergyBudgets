@@ -46,11 +46,7 @@ library(caret)
 options(digits=3) # Change rounding to 3 digits
 ```
 
-```{r load_CAREERsites, echo = FALSE, message = FALSE, warning = FALSE}
-sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
-```
-
-```{r energyCalculation, echo = FALSE}
+```{r energyFunctions, echo = FALSE}
 # Denitrification energy calculation
 convertDenit <- function(denitData_mgNm2hr){
   denitData_mgNm2hr * 28.4 * 10 / 1000 / 14 / 2
@@ -59,9 +55,14 @@ convertDenit <- function(denitData_mgNm2hr){
 convertER <- function(ERData_gO2m2d){
   ERData_gO2m2d * 29.9 * 4 * (2/32) / 24
 }
+# Function for calculating standard error
+se <- function(x){
+  sd(x, na.rm = T)/sqrt(length(na.omit(x)))
+}
 ```
 
-```{r load_LINXII, echo = FALSE, message = FALSE, warning = FALSE}
+```{r calculate_LINXII, echo = FALSE, message = FALSE, warning = FALSE}
+### Load LINX II and calculate energy production ##############################
 # Site information and denitrification rates
 LINXII <- 
   read_csv(file = "data/LINXII_Denit_Mulholland2009.csv", na = "NaN") %>% 
@@ -79,23 +80,24 @@ LINXII$vfden_cms <- (LINXII$Discharge_Ls / LINXII$Width_m) *
 ## This fix gives data that matches Figure 4 from Mulholland 2009 exactly
 LINXII$Denit_mgNm2hr <- (LINXII$vfden_cms * LINXII$NO3_ugNL) * 36
 
-# Metabolism
+# Load metabolism
 LINXII_met <- read_csv(file = "data/LINXII_Metab_Bernot2010.csv", na = "NaN")
 # Merge
 LINXII <- left_join(LINXII %>% select(-Latitude, -Longitude, -DrainageArea_ha,
                                       -vfden_cms),
           LINXII_met %>% select(-Latitude, -Longitude, -DrainageArea_ha))
-# Remove
 rm(LINXII_met)
 
 # Run calculation
 LINXII$EnergyDenit_kCalm2hr <- convertDenit(LINXII$Denit_mgNm2hr)
 LINXII$EnergyER_kCalm2hr <- convertER(LINXII$ER_gO2m2d)
 LINXII$EnergyTot_kCalm2hr <- LINXII$EnergyDenit_kCalm2hr + LINXII$EnergyER_kCalm2hr
-LINXII$EnergyDenit_percent <- LINXII$EnergyDenit_kCalm2hr / LINXII$EnergyTot_kCalm2hr * 100
-LINXII$EnergyER_percent <- LINXII$EnergyER_kCalm2hr / LINXII$EnergyTot_kCalm2hr * 100
+LINXII$EnergyDenit_percent <- LINXII$EnergyDenit_kCalm2hr / 
+  LINXII$EnergyTot_kCalm2hr * 100
+LINXII$EnergyER_percent <- LINXII$EnergyER_kCalm2hr / 
+  LINXII$EnergyTot_kCalm2hr * 100
 
-# Create numeric dataset for modeling
+### Create numeric dataset for modeling #######################################
 LINXII_numeric <- LINXII %>% 
   select(-Source, -NOTES, -SiteName, -StudyDate_N15, -StudyDate_Metab) %>%
   mutate_if(is.character, as.factor)
@@ -109,91 +111,70 @@ LINXII_numeric <- LINXII_numeric %>% na.omit()
 # Remove near zero variance columns
 nzv <- nearZeroVar(LINXII_numeric)
 LINXII_numeric <- LINXII_numeric[, -nzv]
+rm(nzv)
+rm(dummies)
 ```
 
-```{r load_StreamPULSEmodels, echo = FALSE, message = FALSE, warning = FALSE}
+```{r calculate_CAREER, echo = FALSE, message = FALSE, warning = FALSE}
+### Load metabolism models for CAREER data ####################################
+# Load list of CAREER sites
+CAREER_sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
 # Create list of file names using site ID information
 fileRegEx <- unique(paste0("predictions_",
-                          sites$StreamPULSE_SiteID,".*rds"))
+                          CAREER_sites$StreamPULSE_SiteID,".*rds"))
 # Pull paths of matching file names
 fileList <- lapply(fileRegEx, 
                    function(x){list.files(path = "data/all_sp_model_objects",
                                           pattern = x, full.names = T)})
 fileList <- unlist(fileList)
 # Load model results from files
-modelResults <- sapply(fileList, readRDS, simplify = F, USE.NAMES = T)
-
-# Create dummy function to calculate standard error
-se <- function(x){
-  sd(x, na.rm = T)/sqrt(length(na.omit(x)))
-}
+CAREERMetab <- sapply(fileList, readRDS, simplify = F, USE.NAMES = T)
 
 # Flatten list
-modelResults <- bind_rows(modelResults, .id = "site")
-
+CAREERMetab <- bind_rows(CAREERMetab, .id = "site")
 # Format daily data
-modelResults_all <- 
-  modelResults %>%
+CAREERMetab <- 
+  CAREERMetab %>%
+  rename(GPP_gO2m2d = GPP, GPP.lower_gO2m2d = GPP.lower, 
+         GPP.upper_gO2m2d = GPP.upper, ER_gO2m2d = ER, 
+         ER.lower_gO2m2d = ER.lower, ER.upper_gO2m2d = ER.upper) %>%
   mutate(site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2],
-         NEP = GPP - abs(ER),
-         DOY = yday(date),
-         year = as.factor(year(date)))
+         ER_gO2m2d = abs(ER_gO2m2d), ER.lower_gO2m2d = abs(ER.lower_gO2m2d),
+         ER.upper_gO2m2d = abs(ER.upper_gO2m2d)) 
 
-# Compute averages by month
-modelResults_monthly <-
-  modelResults %>%
-  mutate(month = month(ymd(date), label = TRUE),
-         site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2]) %>%
-  group_by(site, month) %>%
-  summarise(GPP_sd = sd(GPP, na.rm = T), 
-            GPP_mean = mean(GPP, na.rm = T),
-            ER_sd = sd(ER, na.rm = T),
-            ER_mean = mean(ER, na.rm = T),
-            # Calculate NEP as GPP - ER
-            NEP_mean = mean(GPP - abs(ER), na.rm = T),
-            NEP_sd = sd(GPP - abs(ER), na.rm = T))
+### Calculate ER energy  ######################################################
+CAREERMetab$EnergyER_kCalm2hr <- convertER(CAREERMetab$ER_gO2m2d)
 
-# Compute averages by DOY
-modelResults_DOY <-
-  modelResults %>%
-  mutate(DOY = yday(date),
-         site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2]) %>%
-  group_by(site, DOY) %>%
-  summarise(GPP_sd = sd(GPP, na.rm = T), 
-            GPP_mean = mean(GPP, na.rm = T),
-            ER_sd = sd(ER, na.rm = T),
-            ER_mean = mean(ER, na.rm = T),
-            NEP_mean = mean(GPP - abs(ER), na.rm = T),
-            NEP_sd = sd(GPP - abs(ER), na.rm = T))
-
-############## Load and clean StreamPULSE nutrient data ############## 
-```
-
-```{r load_CAREERdata, echo = FALSE, message = FALSE, warning = FALSE}
-############## Load nutrient process rates data ############## 
-Nprocess <- read_csv(file = "data/CAREER_RatesTable.csv")
-# Unite site code row with Nprocess table
-#Nprocess <- left_join(Nprocess, sites[c(1,4)], by = "SiteName") # This isn't being matched correctly
-Nprocess$date <- mdy(Nprocess$date)
+### Load nutrient process rates data from CAREER study ####################### 
+CAREER <- read_csv(file = "data/CAREER_RatesTable.csv")
+CAREER$date <- mdy(CAREER$date)
+# Reshape from long to wide format
+CAREER <- CAREER %>% 
+  pivot_wider(names_from = Process, values_from = c(ProcessRate, SE)) %>%
+  rename(Denit_mgNm2hr = "ProcessRate_UnamendedDenit",
+         Denit.SE_mgNm2hr = "SE_UnamendedDenit",
+         AmendedDenit_mgNm2hr = "ProcessRate_Amended",
+         AmendedDenit.SE_mgNm2hr = "SE_Amended",
+         NFix_mgNm2hr = "ProcessRate_N fixation",
+         NFix.SE_mgNm2hr = "SE_N fixation")
 
 # Unite with metabolism data
-Nprocess <- 
-  left_join(Nprocess, modelResults_all, 
+CAREER <- 
+  left_join(CAREER, CAREERMetab, 
             by = c("date", "StreamPULSE_SiteID" = "site")) 
 
-# Filter to fixation and unamended denit
-Nprocess <- 
-  Nprocess %>%
-  #filter(Process == "NFixation" | Process == "UnamendedDenit") %>%
-  drop_na(StreamPULSE_SiteID) %>%
-  #filter(Substrate %in% c("Sediment", "Rock", "Wood")) %>%
-  select(-AFDM, -Chla, -SubstrateArea, -SubstrateVolume, -msgs.fit, -warnings, 
-         -errors, -DOY, -year)
-# Set Process names
-Nprocess$Process <- factor(Nprocess$Process, 
-         levels = c("N fixation", "UnamendedDenit", "Amended"),
-         labels = c("Nitrogen Fixation", "Unamended Denitrification", 
-                    "Amended Denitrification"))
+### Calculate denitrification energy, energy budgets  #########################
+CAREER$EnergyDenit_kCalm2hr <- convertDenit(CAREER$Denit_mgNm2hr)
+CAREER$EnergyTot_kCalm2hr <- CAREER$EnergyDenit_kCalm2hr + 
+  CAREER$EnergyER_kCalm2hr
+CAREER$EnergyDenit_percent <- CAREER$EnergyDenit_kCalm2hr / 
+  CAREER$EnergyTot_kCalm2hr * 100
+CAREER$EnergyER_percent <- CAREER$EnergyER_kCalm2hr / 
+  CAREER$EnergyTot_kCalm2hr * 100
+
+### Create numeric dataframe for modeling #####################################
+
+
 ```
 
 ```{r model_StreamPULSE, eval = FALSE}
@@ -234,7 +215,7 @@ vars <- c('DO_mgL','DOsat_pct','satDO_mgL','WaterPres_kPa',
 # Ahh. NEON collects field-based surveys of discharge, intermittant
 
 # Define list of sites for metabolism modeling
-siteList <- c("NH_HBF", "NH_WHB", "MA_HOPB-down", "PR_GUIL-up")
+siteList <- c("NH_HBF", "NH_WHB")
 
 # This loop will iterate through the list of sites, pulling data from 
 # StreamPULSE and modeling metabolism for the period of record. Metabolism 
