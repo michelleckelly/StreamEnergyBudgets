@@ -6,6 +6,7 @@
 .Rapp.history
 *Icon?
 *Icon
+/data/Icon
 
 # Ignore Rmd default cache directory
 /cache/
