@@ -169,9 +169,9 @@ CAREER$EnergyER_percent <- CAREER$EnergyER_kCalm2hr /
 ```
 
 ```{r model_StreamPULSE, eval = FALSE}
-# 18 Feb 2020
-# This chunk is for modeling metabolism for sites with model records not yet
+# Modeling metabolism for sites with model records not yet
 # compiled on StreamPULSE
+# NOTE: You will have to roll back your R version to 3.6.3 or earlier before proceeding, as streamMetabolizer isn't yet built for R 4.0.0
 
 # Load libraries
 library(StreamPULSE)
@@ -186,27 +186,11 @@ vars <- c('DO_mgL','DOsat_pct','satDO_mgL','WaterPres_kPa',
           'Depth_m','WaterTemp_C','Light_PAR','AirPres_kPa',
           'Discharge_m3s', "ChlorophyllA_ugL", "Nitrate_mgL")
 
-## See if you can pull in NEON discharge data with NEON utilities package
-# Data to be pulled from NEON:
-# Depth_m, WaterTemp_C, Nitrate_mgL, ChlorophyllA_ugL, DO_mgL, DOsat_pct, satDO_mgL, WaterPres_kPa, Light_PAR, AirPres_kPa, Discharge_m3s 
-
-# Streampulse variable    NEON product ID     NEON name
-# Depth_m                 DP1.20016.001       Elevation of surface water
-# WaterTemp_C             DP1.20053.001       Temperature (PRT) in surface water
-# DO_mgL                  DP1.20288.001       Water quality
-# DOsat_pct
-# satDO_mgL
-# WaterPres_kPa
-# Light_PAR               DP1.00024.001       Photosynthetically active radiation (PAR)
-# AirPres_kPa
-# Discharge_m3s
-# Nitrate_mgL
-# ChlorophyllA_ugL      DP1.20288.001       Water quality
-
-# Ahh. NEON collects field-based surveys of discharge, intermittant
-
 # Define list of sites for metabolism modeling
-siteList <- c("NH_HBF", "NH_WHB")
+siteList <- c("AZ_WB")
+# Define dates, YYYY-MM-DD enter NULL for both if wish is to pull period of record
+startDate <- "2019-05-01"
+endDate <- "2019-06-01"
 
 # This loop will iterate through the list of sites, pulling data from 
 # StreamPULSE and modeling metabolism for the period of record. Metabolism 
@@ -220,7 +204,8 @@ for (i in 1:length(siteList)){
   startTime <- proc.time()
   
   ######################## Pull data from StreamPULSE ########################
-  data <- request_data(sitecode = site, variables = vars)
+  data <- request_data(sitecode = site, variables = vars, 
+                       startdate = startDate, enddate = endDate)
   # If error in pulling data, throw warning and move on to next site in list
   if (!exists("data")){
     warning(paste0("Data could not be pulled for site ", site))
@@ -258,20 +243,15 @@ for (i in 1:length(siteList)){
   message(paste0("Metabolism modeled for site ", site, ". \nElapsed time: ", 
                  (proc.time()[3]-startTime[3])/60, " minutes"))
   flush.console()
-  
-  ############################ Save to file ############################
-  saveRDS(model_fit, file = paste0("./model_outputs/Metabolism_", site, ".RData"))
-  message(paste0("Model for site ", site, " saved to file. \nElapsed time: ", 
-                 (proc.time()[3]-startTime[3])/60, " minutes"))
-  flush.console()
 }
 
-# QAQC notes: run UT_REDB-up for a small length of time, lots of NA depth, 
-# estimates from full TS are negative
 
 ggplot(data = model_fit$predictions) +
   geom_point(aes(x = date, y = ER)) +
   geom_ribbon(aes(ymin = ER.lower, ymax = ER.upper, x = date))
+ggplot(data = model_fit[["fit"]]@fit[["daily"]]) +
+  geom_line(aes(x = date, y = K600_daily_mean)) +
+  geom_ribbon(aes(ymin = K600_daily_25pct, ymax = K600_daily_75pct, x = date))
 ```
 
 ```{r pull-NEON, eval = FALSE}
@@ -284,6 +264,25 @@ library(neonUtilities) # Built under R version 3.6.2
 #devtools::install_github(repo = "NEONScience/NEON-water-quality/localPressureDO")
 library(localPressureDO)
 library(streamMetabolizer)
+
+## See if you can pull in NEON discharge data with NEON utilities package
+# Data to be pulled from NEON:
+# Depth_m, WaterTemp_C, Nitrate_mgL, ChlorophyllA_ugL, DO_mgL, DOsat_pct, satDO_mgL, WaterPres_kPa, Light_PAR, AirPres_kPa, Discharge_m3s 
+
+# Streampulse variable    NEON product ID     NEON name
+# Depth_m                 DP1.20016.001       Elevation of surface water
+# WaterTemp_C             DP1.20053.001       Temperature (PRT) in surface water
+# DO_mgL                  DP1.20288.001       Water quality
+# DOsat_pct
+# satDO_mgL
+# WaterPres_kPa
+# Light_PAR               DP1.00024.001       Photosynthetically active radiation (PAR)
+# AirPres_kPa
+# Discharge_m3s
+# Nitrate_mgL
+# ChlorophyllA_ugL      DP1.20288.001       Water quality
+
+# Ahh. NEON collects field-based surveys of discharge, intermittant
 
 ## Pull raw NEON dataset -----------------------------------------------------
 # Define sites of interest
