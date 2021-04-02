@@ -148,15 +148,6 @@ CAREERMetab$EnergyER_kCalm2hr <- convertER(CAREERMetab$ER_gO2m2d)
 ### Load nutrient process rates data from CAREER study ####################### 
 CAREER <- read_csv(file = "data/CAREER_RatesTable.csv")
 CAREER$date <- mdy(CAREER$date)
-# Reshape from long to wide format
-CAREER <- CAREER %>% 
-  pivot_wider(names_from = Process, values_from = c(ProcessRate, SE)) %>%
-  rename(Denit_mgNm2hr = "ProcessRate_UnamendedDenit",
-         Denit.SE_mgNm2hr = "SE_UnamendedDenit",
-         AmendedDenit_mgNm2hr = "ProcessRate_Amended",
-         AmendedDenit.SE_mgNm2hr = "SE_Amended",
-         NFix_mgNm2hr = "ProcessRate_N fixation",
-         NFix.SE_mgNm2hr = "SE_N fixation")
 
 # Unite with metabolism data
 CAREER <- 
