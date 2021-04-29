@@ -11,9 +11,9 @@ twitter:
 navbar:
   right:
     - text: "Analysis"
-      href: StreamEnergyBudgets_Head.html
+      href: StreamEnergyBudgets.html
     - text: "Source Code"
-      href: https://github.com/michelleckelly/StreamEnergyBudgets/blob/master/StreamEnergyBudgets_Head.Rmd
+      href: https://github.com/michelleckelly/StreamEnergyBudgets/blob/master/StreamEnergyBudgets.Rmd
     - icon: fab fa-github
       href: https://github.com/michelleckelly/StreamEnergyBudgets/
 output:
