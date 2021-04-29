@@ -47,6 +47,11 @@ library(ggfortify)
 library(AppliedPredictiveModeling)
 library(caret)
 options(digits=3) # Change rounding to 3 digits
+
+# Colorblind-friendly palette developed by IBM, 2, 4 and 5 color version
+ibm2 <- c("#648FFF", "#DC267F")
+ibm4 <- c("#785EF0", "#DC267F", "#FE6100", "#FFB000")
+ibm5 <- c("#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000")
 ```
 
 ```{r energyFunctions, echo = FALSE}
@@ -62,13 +67,9 @@ convertER <- function(ERData_gO2m2d){
 se <- function(x){
   sd(x, na.rm = T)/sqrt(length(na.omit(x)))
 }
-
-# Colorblind-friendly palette developed by IBM, 4 and 5 color version
-ibm4 <- c("#785EF0", "#DC267F", "#FE6100", "#FFB000")
-ibm5 <- c("#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000")
 ```
 
-```{r calculate_LINXII, echo = FALSE, message = FALSE, warning = FALSE}
+```{r load_LINXII, echo = FALSE, message = FALSE, warning = FALSE}
 ### Load LINX II and calculate energy production ##############################
 # Site information and denitrification rates
 LINXII <- 
@@ -125,7 +126,7 @@ rm(nzv)
 rm(dummies)
 ```
 
-```{r calculate_CAREER, echo = FALSE, message = FALSE, warning = FALSE}
+```{r load_CAREER, echo = FALSE, message = FALSE, warning = FALSE}
 ### Load metabolism models for CAREER data ####################################
 # Load list of CAREER sites
 CAREER_sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
@@ -408,10 +409,17 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-```{r plotMapLINXII, fig.cap="Map of StreamPULSE (n = 12), NEON (n = 13), and LINXII (n = 49) study sites used in this analysis. Blue = StreamPULSE site, yellow = NEON site, orange = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+```{r plotMapLINXII, fig.cap="Map of Marcarelli CAREER (n = 7), and LINXII (n = 49) study sites used in this analysis. Pink = Marcarelli CAREER site, blue = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 ##### Plot LINXII and CAREER Site Map #####
-# Merge sites_LINXII with CAREER_sites
-sites <- full_join(CAREER_sites, LINXII_sites) %>% filter(Organization != "Other")
+# Merge sites_LINXII with CAREER_sites that we have modeled metabolism for
+# so far
+sites <- full_join(CAREER_sites[as.character(CAREER_sites$SiteName) 
+                                %in% unique(CAREER %>% 
+                                              filter(!is.na(GPP_gO2m2d)) %>% 
+                                              pull(SiteName)),],
+                   LINXII_sites)
+sites <- distinct(sites, SiteName, .keep_all = TRUE)
+
 
 # Pull state map data
 world.map <- map_data("world")
@@ -421,7 +429,7 @@ states.map <- map_data("state")
 ggplot() +
   # State and country outlines
   geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
-               color = "grey", size = 0.2, fill = NA) +
+               color = "black", size = 0.2, fill = NA) +
   geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
                color = "grey", size = 0.2, fill = NA) +
   geom_polygon(data = subset(world.map, region == "USA"), 
@@ -430,12 +438,14 @@ ggplot() +
   # Location markers
   geom_point(data = sites, aes(x = Longitude, y = Latitude, 
                                       fill = Organization), 
-             shape = 21, size = 4, stroke = 0.5, color = "black") +
-  coord_fixed(1.3, xlim = c(-160,-60), ylim = c(15, 70)) +
+             shape = 21, size = 7, alpha = 0.6, color = "black") +
+  
+  coord_fixed(1.3, xlim = c(-125,-60), ylim = c(15, 50)) +
   # Theme adjustments
   theme_nothing() +
   theme(panel.background = element_rect(color = "black", fill = "white")) +
-  #scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
+  scale_fill_manual(values = ibm2) +
+  scale_color_manual(values = ibm2) +
   guides(fill = FALSE)
 ```
 
