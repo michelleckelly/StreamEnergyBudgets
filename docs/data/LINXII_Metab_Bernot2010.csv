@@ -1,4 +1,4 @@
-﻿Source,State,SiteName,StudyDate_Metab,LandUse,Latitude,Longitude,DrainageArea_ha,GPP_gO2m2d,ER_gO2m2d,MeanDailyWaterFlow_m3,MeanDailyTemperature_C,MeanDailyDO_mgL,MeanDailyPAR_molquantam2
+﻿Organization,State,SiteName,StudyDate_Metab,LandUse,Latitude,Longitude,DrainageArea_ha,GPP_gO2m2d,ER_gO2m2d,MeanDailyWaterFlow_m3,MeanDailyTemperature_C,MeanDailyDO_mgL,MeanDailyPAR_molquantam2
 LINXII,PR,Ceiba,17-Feb-06,URB,18.27,-65.65,505,9.3,11.7,5837,25.3,8.27,1.98
 LINXII,PR,Bisley,8-Feb-04,REF,18.32,-65.75,58,0.1,2.4,3400,21.3,8.24,0.15
 LINXII,PR,Maizales,11-Feb-05,AGR,18.23,-65.76,265,7.3,5.3,2373,23,8.72,13.95

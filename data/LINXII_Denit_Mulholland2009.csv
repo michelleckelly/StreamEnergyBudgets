@@ -1,4 +1,4 @@
-State,SiteName,Source,LandUse,Latitude,Longitude,StudyDate_N15,BIOME,DrainageArea_ha,PCT_NATVEG,PCT_AGR,PCT_URB,PCT_CHANSLOPE,Discharge_Ls,Width_m,v_mmin,Depth_m,WaterTemp_C,NO3_ugNL,NH4_ugNL,SRP_ugL,DOC_mgL,TotalNO3UptakeRate_m,DenitrificationRate_m,NOTES
+State,SiteName,Organization,LandUse,Latitude,Longitude,StudyDate_N15,BIOME,DrainageArea_ha,PCT_NATVEG,PCT_AGR,PCT_URB,PCT_CHANSLOPE,Discharge_Ls,Width_m,v_mmin,Depth_m,WaterTemp_C,NO3_ugNL,NH4_ugNL,SRP_ugL,DOC_mgL,TotalNO3UptakeRate_m,DenitrificationRate_m,NOTES
 MA,Cart Creek,LINXII,REF,42.77133,-70.91995,15-Jul-03,deciduous_n,395.7,56.6,8,10.7,0.01,4.8,2.5,0.6,0.18,17.9,15,293,1,8.7,2.81E-03,NaN,Land cover total does not include 24.8% wetlands
 MA,IS_104,LINXII,URB,42.53797,-71.20925,29-Jul-03,deciduous_n,132.9,12.5,5.4,65.9,0.01,2.1,1.3,0.9,0.11,17.1,1336,121,2,2.8,7.03E-04,4.33E-04,Land cover total does not include 16.2% wetlands
 MA,Boxford,LINXII,REF,42.64177,-70.9943,27-Jul-04,deciduous_n,155.2,79.9,0,1.4,0.02,12.2,1.5,4,0.12,19.8,53,13,9,6.8,7.29E-04,1.95E-04,Land cover total does not include 18.7% wetlands

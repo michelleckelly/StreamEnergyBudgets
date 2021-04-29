@@ -1,0 +1,676 @@
+---
+title: "Are anaerobic energy-generation pathways significant contributors to stream energy budgets?"
+description: "2021 SFS Annual Meeting: Original Talk"
+author: 
+  - name: "Michelle Catherine Kelly"
+    url: https://michelleckelly.github.io
+    affiliation: Michigan Tech
+  - name: "Kevin Nevorski"
+    url: https://twitter.com/KNevorski?s=20
+    affiliation: Michigan Tech
+  - name: "Erin K. Eberhard"
+    url: https://twitter.com/Erin_K_Eberhard?s=20
+    affiliation: Michigan Tech
+  - name: "Amy M. Marcarelli"
+    url: http://marcarelli-lab.bio.mtu.edu/
+    affiliation: Michigan Tech
+date: "`r format(Sys.Date())`"
+bibliography: bibliography.bib
+output:
+  distill::distill_article:
+    self_contained: false
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+# Abstract
+
+While we focus on the aerobic processes of gross primary production (GPP) and ecosystem respiration (ER) to parameterize stream metabolism, we also know that anaerobic, energy-releasing processes are common in streams. Denitrification, which releases just 5% less free energy than aerobic respiration, is one such process. We ask: are anaerobic energy-generation pathways significant contributors to stream energy budgets? We measured denitrification (acetylene block) and aerobic metabolism in 25 study streams in the USA (NEON n=13, StreamPULSE n=12), modeling GPP and ER using a one or two-station inverse Bayesian approach. This dataset was supplemented with denitrification (15-N tracer) and metabolism from LINXII (n=28). Areal denitrification and ER rates were converted to rates of energy release using Gibbs free energy values. Total energy released was calculated as free energy from denitrification plus ER. Linear, nonlinear, and tree-based regression models, where the best fit model was determined by testing set performance, were used to determine which environmental variables were most important to predicting the proportion of the total energy budget released via denitrification. Preliminary results show denitrification contributing to as much as 9.6% of the total energy budget of a single stream. 
+
+# Introduction
+
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+# Load libraries
+library(tidyverse)
+library(lubridate)
+library(plotrix)
+library(gridExtra)
+library(ggmap)
+library(ggrepel)
+library(wesanderson)
+library(maps)
+library(wesanderson)
+library(corrplot)
+library(svMisc)
+library(ggfortify)
+library(AppliedPredictiveModeling)
+library(caret)
+options(digits=3) # Change rounding to 3 digits
+```
+
+```{r energyFunctions, echo = FALSE}
+# Denitrification energy calculation
+convertDenit <- function(denitData_mgNm2hr){
+  denitData_mgNm2hr * 28.4 * 10 / 1000 / 14 / 2
+}
+# Ecosystem respiration energy calculation
+convertER <- function(ERData_gO2m2d){
+  ERData_gO2m2d * 29.9 * 4 * (2/32) / 24
+}
+# Function for calculating standard error
+se <- function(x){
+  sd(x, na.rm = T)/sqrt(length(na.omit(x)))
+}
+
+# Colorblind-friendly palette developed by IBM, 4 and 5 color version
+ibm4 <- c("#785EF0", "#DC267F", "#FE6100", "#FFB000")
+ibm5 <- c("#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000")
+```
+
+```{r calculate_LINXII, echo = FALSE, message = FALSE, warning = FALSE}
+### Load LINX II and calculate energy production ##############################
+# Site information and denitrification rates
+LINXII <- 
+  read_csv(file = "data/LINXII_Denit_Mulholland2009.csv", na = "NaN") %>% 
+  filter(!is.na(DenitrificationRate_m))
+LINXII_sites <- LINXII %>% select(State, SiteName, Organization, LandUse, BIOME, 
+                                  Latitude, Longitude, DrainageArea_ha)
+
+# Convert denitrification rate per meter to v_fden 
+# (see Mulholland 2009 methods)
+LINXII$vfden_cms <- (LINXII$Discharge_Ls / LINXII$Width_m) *
+  LINXII$DenitrificationRate_m * 0.1
+# Convert v_fden to U_den in mg-N m-2 hr-1
+## NOTE: MULHOLLAND ET AL 2009 SAYS to use 3.6 as the conversion factor -
+## this is incorrect. The conversion factor should be 36 with these units
+## This fix gives data that matches Figure 4 from Mulholland 2009 exactly
+LINXII$Denit_mgNm2hr <- (LINXII$vfden_cms * LINXII$NO3_ugNL) * 36
+
+sum(LINXII$Denit_mgNm2hr <= 0, na.rm = T) / length(LINXII$Denit_mgNm2hr)
+LINXII$Denit_mgNm2hr[LINXII$Denit_mgNm2hr <= 0] <- NA
+
+# Load metabolism
+LINXII_met <- read_csv(file = "data/LINXII_Metab_Bernot2010.csv", na = "NaN")
+# Merge
+LINXII <- left_join(LINXII %>% select(-Latitude, -Longitude, -DrainageArea_ha,
+                                      -vfden_cms),
+          LINXII_met %>% select(-Latitude, -Longitude, -DrainageArea_ha))
+rm(LINXII_met)
+
+# Run calculation
+LINXII$EnergyDenit_kCalm2hr <- convertDenit(LINXII$Denit_mgNm2hr)
+LINXII$EnergyER_kCalm2hr <- convertER(LINXII$ER_gO2m2d)
+LINXII$EnergyTot_kCalm2hr <- LINXII$EnergyDenit_kCalm2hr + LINXII$EnergyER_kCalm2hr
+LINXII$EnergyDenit_percent <- LINXII$EnergyDenit_kCalm2hr / 
+  LINXII$EnergyTot_kCalm2hr * 100
+LINXII$EnergyER_percent <- LINXII$EnergyER_kCalm2hr / 
+  LINXII$EnergyTot_kCalm2hr * 100
+
+### Create numeric dataset for modeling #######################################
+LINXII_numeric <- LINXII %>% 
+  select(-Organization, -NOTES, -SiteName, -StudyDate_N15, -StudyDate_Metab) %>%
+  mutate_if(is.character, as.factor)
+# Dummy variables
+dummies <- dummyVars( ~., data = LINXII_numeric)
+LINXII_numeric <- data.frame(predict(dummies, newdata = LINXII_numeric))
+# Add back in locations
+LINXII_numeric$Latitude <- LINXII_sites$Latitude
+LINXII_numeric$Longitude <- LINXII_sites$Longitude
+LINXII_numeric <- LINXII_numeric %>% na.omit()
+# Remove near zero variance columns
+nzv <- nearZeroVar(LINXII_numeric)
+LINXII_numeric <- LINXII_numeric[, -nzv]
+rm(nzv)
+rm(dummies)
+```
+
+```{r calculate_CAREER, echo = FALSE, message = FALSE, warning = FALSE}
+### Load metabolism models for CAREER data ####################################
+# Load list of CAREER sites
+CAREER_sites <- read.csv(file = "data/CAREER_SiteAttributes.csv")
+CAREER_sites$date <- mdy(CAREER_sites$date)
+# Create list of file names using site ID information
+fileRegEx <- unique(paste0("predictions_",
+                          CAREER_sites$StreamPULSE_SiteID,".*rds"))
+# Pull paths of matching file names
+fileList <- lapply(fileRegEx, 
+                   function(x){list.files(path = "data/all_sp_model_objects",
+                                          pattern = x, full.names = T)})
+fileList <- unlist(fileList)
+# Load model results from files
+CAREERMetab <- sapply(fileList, readRDS, simplify = F, USE.NAMES = T)
+
+# Flatten list
+CAREERMetab <- bind_rows(CAREERMetab, .id = "site")
+# Format daily data
+CAREERMetab <- 
+  CAREERMetab %>%
+  rename(GPP_gO2m2d = GPP, GPP.lower_gO2m2d = GPP.lower, 
+         GPP.upper_gO2m2d = GPP.upper, ER_gO2m2d = ER, 
+         ER.lower_gO2m2d = ER.lower, ER.upper_gO2m2d = ER.upper) %>%
+  mutate(site = str_match(site, "predictions_(\\w{2}_\\w+)_")[,2],
+         ER_gO2m2d = abs(ER_gO2m2d), ER.lower_gO2m2d = abs(ER.lower_gO2m2d),
+         ER.upper_gO2m2d = abs(ER.upper_gO2m2d)) 
+
+### Calculate ER energy  ######################################################
+CAREERMetab$EnergyER_kCalm2hr <- convertER(CAREERMetab$ER_gO2m2d)
+
+### Load nutrient process rates data from CAREER study ####################### 
+CAREER <- read_csv(file = "data/CAREER_RatesTable.csv")
+CAREER$date <- mdy(CAREER$date)
+CAREER <- full_join(CAREER, CAREER_sites)
+sum(CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0, na.rm = T) /
+  length(CAREER$DenitUnamended_Mean_uMolN2Om2hr)
+CAREER$DenitUnamended_SD_uMolN2Om2hr[CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0] <- NA
+CAREER$DenitUnamended_Mean_uMolN2Om2hr[CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0] <- NA
+
+# Group rock cobble and rock flock into rock category
+CAREER$Substrate <- recode(CAREER$Substrate, "Rock Flock" = "Rock", 
+                             "Rock scrape" = "Rock", "Gravel" = "Rock",
+                             "Bedrock scrape" = "Rock", "Pebble" = "Rock",
+                             "Clay" = "Sediment", "Algae" = "Macrophyte",
+                           "CPOM" = "Macrophyte")
+CAREER$Substrate <- factor(CAREER$Substrate, 
+                           levels = c("Sediment", "Macrophyte", "Wood", "Rock"))
+
+# Unite with metabolism data
+CAREER <- 
+  left_join(CAREER, CAREERMetab, 
+            by = c("date", "StreamPULSE_SiteID" = "site")) 
+
+### Calculate denitrification energy, energy budgets  #########################
+CAREER$DenitUnamended_Mean_mgNm2hr <- 
+  CAREER$DenitUnamended_Mean_uMolN2Om2hr * 2 / 10^3 * 14
+CAREER$EnergyDenit_kCalm2hr <- 
+  convertDenit(CAREER$DenitUnamended_Mean_mgNm2hr)
+CAREER$EnergyTot_kCalm2hr <- 
+  CAREER$EnergyDenit_kCalm2hr + CAREER$EnergyER_kCalm2hr
+CAREER$EnergyDenit_percent <- 
+  CAREER$EnergyDenit_kCalm2hr / CAREER$EnergyTot_kCalm2hr * 100
+CAREER$EnergyER_percent <- 
+  CAREER$EnergyER_kCalm2hr / CAREER$EnergyTot_kCalm2hr * 100
+
+### Create numeric dataframe for modeling #####################################
+CAREER_numeric <- CAREER %>% 
+  select(-State, -StreamPULSE_SiteID, -date, -SampleYear, -SampleMonth, 
+         -msgs.fit, -warnings, -errors, -Organization, -SiteName, -NEON_SiteID, 
+         -StreamPULSE_SiteID) %>%
+  mutate_if(is.character, as.factor)
+# Dummy variables
+dummies <- dummyVars( ~., data = CAREER_numeric)
+CAREER_numeric <- data.frame(predict(dummies, newdata = CAREER_numeric))
+#CAREER_numeric <- CAREER_numeric %>% na.omit()
+# Remove near zero variance columns
+nzv <- nearZeroVar(CAREER_numeric)
+CAREER_numeric <- CAREER_numeric[, -nzv]
+rm(nzv)
+rm(dummies)
+```
+
+
+```{r plotNEPmonthlymean, eval = F, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and calculated mean monthly NEP (B) for the period of record. Shaded ribbons (B) represent standard deviation of NEP.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
+# Plot of DOY vs GPP or ER, faceted by site
+a <- 
+  ggplot(data = NULL) +
+  # Facet wrap plots
+  facet_wrap(~site, nrow = 3) +
+  # Lines for all years of data
+  geom_line(data = modelResults_all, aes(x = DOY, y = NEP, linetype = year), color = "darkgrey", alpha = 0.7) +
+  # Lines for mean data
+  geom_line(data = modelResults_DOY, aes(x = DOY, y = NEP_mean, color = site)) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Day of year") +
+  labs(tag = "A") +
+  # Remove legend for site
+  guides(color = FALSE, linetype = guide_legend(nrow = 3, title = "Year")) +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "bottom") +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual")
+
+# Plot of average NEP by month, all sites on one plot
+b <- 
+  ggplot(data = modelResults_monthly, aes(x = month, group = site)) +
+  # Ribbon for visualizing standard error
+  geom_ribbon(aes(ymin = NEP_mean-NEP_sd, 
+                  ymax = NEP_mean+NEP_sd, fill = site), alpha = 0.1)+
+  # Line and points for mean NEP
+  geom_line(aes(y = NEP_mean, color = site)) +
+  geom_point(aes(y = NEP_mean, color = site), 
+             shape = 21, fill = "white", size = 2) +
+  # Horizontal line at y = 0
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  labs(tag = "B", fill = "Site", color = "Site") +
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Day of year") +
+  # Theme adjustments
+  guides(color = guide_legend(nrow = 3), fill = guide_legend(nrow = 3))+
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"), 
+        legend.position = "bottom") +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual") +
+  scale_fill_brewer(palette = 2, type = "qual")
+
+grid.arrange(a,b, ncol = 2)
+```
+
+```{r plotNEPloess, eval = F, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and annual trends in NEP over the period of record visualized using local polynomial regression fitting (LOESS, B). Shaded ribbons (B) represent 95% confidence interval on LOESS estimate.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
+# Plot of DOY vs GPP or ER, faceted by site
+c <- 
+  ggplot(data = NULL) +
+  # Facet wrap plots
+  facet_wrap(~site, nrow = 3) +
+  # Lines for all years of data
+  geom_line(data = modelResults_all, aes(x = DOY, y = NEP, linetype = year), color = "darkgrey", alpha = 0.7) +
+  # Lines for mean data
+  geom_line(data = modelResults_DOY, aes(x = DOY, y = NEP_mean, color = site)) +
+  
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Day of year") +
+  labs(tag = "A") +
+  # Remove legend for site
+  guides(color = FALSE, linetype = guide_legend(nrow = 3, title = "Year")) +
+  # Theme adjustments
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"),
+        legend.position = "bottom") +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual")
+
+# LOESS smooth
+d <- 
+  ggplot(data = modelResults_all, aes(x = DOY, y = NEP)) +
+  stat_smooth(aes(color = site, fill = site), method = "loess") +
+  # Horizontal line at y = 0
+  geom_hline(yintercept = 0, linetype = 2) +
+  # Axis labels and scales
+  labs(tag = "B", fill = "Site", color = "Site") +
+  ylab(expression("NEP (g"~O[2]~m^2~"d"^{-1}*")")) +
+  xlab("Month") +
+  # Theme adjustments
+  guides(color = guide_legend(nrow = 3), fill = guide_legend(nrow = 3))+
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        panel.background = element_rect(color = "black"), 
+        legend.position = "bottom") +
+  # Color scales
+  scale_color_brewer(palette = 2, type = "qual") +
+  scale_fill_brewer(palette = 2, type = "qual")
+
+grid.arrange(c,d, ncol = 2)
+
+
+
+# Compute PCA of metabolism data
+#prcomp(modelResults_all[,c(3,6,12,13)], center = T, scale. = T)
+
+
+#modelResults_all %>%
+ # select(GPP, ER, NEP, DOY)
+
+# Compute Kmediods using pam (Partitioning Around Medoids) from cluster
+#collsub_kmediods <- pam(colleges_sub, k = 3)
+# For K-mediods results
+#fviz_cluster(collsub_kmediods, data = colleges_sub) + 
+ # labs(tag = "B", title = "K-mediods clustering") +
+#  theme_classic() +
+#  theme(legend.position = "none")
+```
+
+```{r plotNProcessRates, fig.cap="Denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood) at each study site. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 10, fig.pos="center"}
+# Boxplot of denitrification rates, by substrate
+a <- ggplot(data = CAREER, aes(y = DenitUnamended_Mean_mgNm2hr, 
+                               x = Substrate)) +
+  stat_boxplot(geom = "errorbar", width = 0.2) +
+  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
+  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, fill = "white") +
+  # Axis labels and scales
+  xlab(expression("Denitrification Rate (mg-N"~m^2~"hr"^{-1}*")")) +
+  labs(tag = "a") +
+  scale_fill_manual(values = ibm4) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.y = element_text(size = 8),
+        panel.background = element_rect(color = "black"), 
+        legend.position = "none") 
+# Zoom in
+b <- ggplot(data = CAREER, aes(y = DenitUnamended_Mean_mgNm2hr, 
+                               x = Substrate)) +
+  stat_boxplot(geom = "errorbar", width = 0.2) +
+  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
+  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, 
+              fill = "white") +
+  # Axis labels and scales
+  ylab(expression("Denitrification Rate (mg-N"~m^2~"hr"^{-1}*")")) +
+  labs(tag = "b") +
+  # Zoom in
+  coord_cartesian(ylim = c(0, 7)) +
+  scale_fill_manual(values = ibm4) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.y = element_text(size = 8),
+        panel.background = element_rect(color = "black"), 
+        legend.position = "none") 
+
+grid.arrange(grobs = list(a, b), layout_matrix = rbind(c(1,2),
+                                                       c(1,2),
+                                                       c(1,2),
+                                                       c(1,NA)))
+```
+
+# Methods  
+
+## Site description  
+
+```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+##### Plot CAREER Site Map #####
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers and labels
+  geom_label_repel(data = CAREER_sites, aes(x = Longitude, y = Latitude, 
+                                     label = SiteName), 
+                   box.padding = 1, size = 4, nudge_x = 0.01, 
+                   segment.size = 0.5, segment.color = "black", 
+                   label.size = 0.6) +
+  geom_point(data = CAREER_sites, aes(x = Longitude, y = Latitude, 
+                                      fill = Organization), 
+             shape = 21, 
+             color = "black", size = 4, stroke = 1) +
+  coord_fixed(1.3, xlim = c(-180,-30), ylim = c(10, 75)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  scale_fill_manual(values = ibm4) +
+  guides(fill = FALSE)
+```
+
+```{r plotMapLINXII, fig.cap="Map of StreamPULSE (n = 12), NEON (n = 13), and LINXII (n = 49) study sites used in this analysis. Blue = StreamPULSE site, yellow = NEON site, orange = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+##### Plot LINXII and CAREER Site Map #####
+# Merge sites_LINXII with CAREER_sites
+sites <- full_join(CAREER_sites, LINXII_sites) %>% filter(Organization != "Other")
+
+# Pull state map data
+world.map <- map_data("world")
+states.map <- map_data("state")
+
+# Plot map
+ggplot() +
+  # State and country outlines
+  geom_polygon(data = world.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = states.map, aes(x = long, y = lat, group = group), 
+               color = "grey", size = 0.2, fill = NA) +
+  geom_polygon(data = subset(world.map, region == "USA"), 
+               aes(x = long, y = lat, group = group), 
+               color = "black", size = 0.2, fill = NA) +
+  # Location markers
+  geom_point(data = sites, aes(x = Longitude, y = Latitude, 
+                                      fill = Organization), 
+             shape = 21, size = 4, stroke = 0.5, color = "black") +
+  coord_fixed(1.3, xlim = c(-160,-60), ylim = c(15, 70)) +
+  # Theme adjustments
+  theme_nothing() +
+  theme(panel.background = element_rect(color = "black", fill = "white")) +
+  #scale_fill_manual(values=wes_palette(n=3, name="FantasticFox1")) +
+  guides(fill = FALSE)
+```
+
+## Denitrification measurement
+
+## Metabolism modeling
+
+### Single-station
+
+### Two-station
+
+## LINX II dataset  
+
+Denitrification rates (as $k_{den}$, $m^{-1}$) were obtained from Mulholland et al. [-@mulholland2009] appendix. Rates were then converted to areal denitirification rates using conversion steps outlined in the methods of Mulholland et al. [-@mulholland2009], where $k_{denT}$ = denitrification rate per unit time ($d^{-1}$), $v$ = average water velocity ($cm ~ s^{-1}$), $v_{fden}$ = denitrification uptake velocity ($cm ~ s^{-1}$), $Q$ = discharge ($L ~ s^{-1}$), $w$ = average stream wetted width ($m$),$U_{den}$ = areal denitirification rate ($mg ~ m^{-2} ~ hr^{-1}$), $C$ = ambient nitrate concentration (ug-N $L^{-1}$).
+
+$$k_{denT} = k_{den} * v * 864$$
+
+$$v_{fden} = (Q/w) * k_{den} * 0.1$$
+
+$$U_{den} = (v_{fden} * C) * 36$$
+
+Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information.  
+
+## Conversion from Process Rate to Energy Production  
+
+Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to energy production rates (kCal $m^{-2} ~ hr^{-1}$) using Gibbs free energy ($\Delta G$) values and molar conversion factors from the balanced chemical reactions of each process.
+
+![Gibbs free energy ($\Delta G$) produced by selected reduction and oxidation reactions in natural waters [at pH = 7; see @stumm_aquatic_1996 pp. 474, 477].](images/Table8-7_Handwritten.jpeg)
+
+![Conversion of denitrification from nitrogen production units of mg-N $m^{-2} ~ hr^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/Denitrification.jpeg)
+
+![Conversion of aerobic respiration from oxygen production units of g-$O_2 ~ m^{-2} ~ day^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/AerobicResp.jpeg)
+
+# Results
+
+```{r DenitRatevsPercentTotalNRG, fig.cap="LINX II streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=5, fig.width=10, fig.pos="H"}
+a <- ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  # Label with site names
+  #geom_text_repel(label = LINXII$SiteName, size = 3) + 
+  # Add data points
+  geom_point(size = 5, shape = 21) +
+  coord_cartesian(xlim = c(0, 10)) +
+  # Theme adjustments
+  theme_classic() +
+  labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
+       y = expression("Percentage of total energy released via denitrification (%)"),
+       tag = "a") +
+  theme(panel.border = element_rect(color = "black", fill = NA),
+        axis.text = element_text(color = "black"),
+        legend.position = c(0.2, 0.8),
+        legend.background = element_rect(color = "black", fill = NA))
+
+b <- ggplot(data = CAREER, aes(x = DenitUnamended_Mean_mgNm2hr, 
+                          y = EnergyDenit_percent, 
+                          fill = Substrate)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  # Add data points
+  geom_point(size = 5, aes(shape = Substrate)) +
+  coord_cartesian(xlim = c(0, 10)) +
+  # Theme adjustments
+  theme_classic() +
+  labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
+       y = expression("Percentage of total energy released via denitrification (%)"),
+       tag = "b") +
+  scale_fill_manual(values = ibm4) +
+  scale_shape_manual(values = c(21, 22, 23, 24)) +
+  theme(panel.border = element_rect(color = "black", fill = NA),
+        axis.text = element_text(color = "black"),
+        legend.position = c(0.15, 0.8),
+        legend.background = element_rect(color = "black", fill = NA))
+
+grid.arrange(a, b, nrow = 1)
+
+# Quartiles
+quantile(LINXII$EnergyDenit_percent, na.rm = T)
+quantile(CAREER$EnergyDenit_percent, na.rm = T)
+```
+
+```{r predictive Denit %, eval = F}
+# (change this section if using a different dataframe)
+#dataFrameName <- LINXII_numeric %>% select (-EnergyER_percent, -Denit_mgNm2hr,
+#                                            -EnergyDenit_kCalm2hr) 
+dataFrameName <- CAREER_numeric %>% select (-EnergyER_percent,
+                                            -DenitUnamended_Mean_mgNm2hr,
+                                            -DenitUnamended_Mean_uMolN2Om2hr,
+                                            -EnergyDenit_kCalm2hr) 
+# Remove percent 
+# of total energy  budget from ER as this will be directly correlated with % 
+# of total from denitrification, remove denitrification rate 
+
+# Explore correlation between predictors and denitrification %
+featurePlot(x = dataFrameName, 
+            y = dataFrameName$EnergyDenit_percent, 
+            plot = "scatter", 
+            type = c("p", "smooth"),
+            span = .5)
+
+# Pre-process data
+preproc <- preProcess(dataFrameName)
+transfor <- predict(preproc, newdata = dataFrameName)
+# Split the data into predictors and response 
+response <- dataFrameName$EnergyDenit_percent
+predictors <- dataFrameName %>% select(-EnergyDenit_percent)
+
+# Check for highly correlated predictors and remove highly correlated 
+# predictors using a cutoff value of 85%
+highCorr <-findCorrelation(cor(predictors), cutoff = 0.85)
+names(predictors[highCorr])
+predictors <- predictors[-highCorr]
+
+# Split data into training and testing
+set.seed(999)
+trainIndex <- createDataPartition(dataFrameName$EnergyDenit_percent, 
+                                  p = .80, list = FALSE)
+predictors_train <- predictors[trainIndex,]
+predictors_test <- predictors[-trainIndex,]
+response_train <- response[trainIndex]
+response_test <- response[-trainIndex]
+
+# Set up a 10 fold repeated CV for all models
+fitControl <- trainControl(method = "repeatedcv", number = 3,
+                           ## repeated 3 times for testing
+                           repeats = 3)
+
+# Train Neural network, MARS, SVM, and KNN models
+## Neural network
+nnetGrid <- expand.grid(.decay = c(0, 0.01, .1),
+                        .size = c(1:30),
+                        .bag = FALSE)
+set.seed(999)
+nnetModel <- train(x = predictors_train, y = response_train, method = "avNNet",
+                  tuneGrid = nnetGrid, linout = TRUE, trace = FALSE,
+                  MaxNWts = 30 * (ncol(predictors_train) + 1) + 30 + 1,
+                  maxit = 500)
+plot(nnetModel, main = "Neural Net")
+# Evaluate test set performance
+nnetPred <- predict(nnetModel, predictors_test)
+postResample(pred = nnetPred, obs = response_test)
+
+## MARS
+set.seed(999)
+marsModel <- train(x = predictors_train, y = response_train, method = "earth", 
+                   tuneGrid = expand.grid(.degree = 1:2, .nprune = 2:30),
+                   trControl = fitControl)
+plot(marsModel, main = "MARS")
+# Evaluate test set performance
+marsPred <- predict(marsModel, newdata = predictors_test)
+postResample(pred = marsPred, obs = response_test)
+
+## SVM
+library(kernlab)
+# Choosing to evaluate a radial SVM
+set.seed(999)
+svmRTuned <- train(x = predictors_train, y = response_train, method = "svmRadial",
+                   tuneLength = 9, trControl = fitControl)
+plot(svmRTuned, main = "Radial SVM")
+# Evaluate test set performance
+svmRPred <- predict(svmRTuned, newdata = predictors_test)
+postResample(pred = svmRPred, obs = response_test)
+
+## KNN
+set.seed(999)
+knnTune <- train(x = predictors_train, y = response_train, method = "knn", 
+                 tuneGrid = data.frame(.k = 1:30), trControl = fitControl)
+plot(knnTune, main = "KNN")
+# Evaluate test set performance
+knnPred <- predict(knnTune, newdata = predictors_test)
+postResample(pred = knnPred, obs = response_test)
+
+## Elastic net
+enetGrid <- expand.grid(.lambda = c(1E-6, 0.00001, 0.0001, 0.001, 0.1, 0.5, 1), 
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(999)
+enetTune <- train(x = predictors_train, y = response_train, method = "enet", 
+                  tuneGrid = enetGrid, trControl = fitControl)
+plot(enetTune, main = "Elastic Net Regression")
+# Evaluate test set performance
+enetPredic <- predict(enetTune, predictors_test)
+postResample(pred = enetPredic, obs = response_test)
+
+
+#defaultSummary(data.frame(obs = testResponse, pred = enetPredic))
+# f. which predictors are most important?
+plot(varImp(enetTune), 10, 
+     main = "Importance of Predictors according to Linear Elastic Net")
+
+# Explore predictor importance from best fit model (lowest RMSE)
+plot(varImp(marsModel), 5, 
+     main = "Importance of Predictors")
+```
+
+```{r PCA, fig.cap="Plots showing the first two principle components from PCA analysis of the assembled LINX II dataset. Plot A shows the first two principle components with points labeled with site names. Plot B shows the first two principle components with labeled eigenvectors overlaid.", fig.height=8, fig.width=5, fig.pos="H", eval = F}
+# Compute PCA, center and scale the data
+pcaModel <- prcomp(CAREER_numeric, center = TRUE, scale. = TRUE) 
+# Predict on data
+LINXII_PCA <- predict(pcaModel, LINXII_numeric)
+
+# Plot first 2 PCA scores in ggplot using ggfortify
+a <- 
+  autoplot(pcaModel, size = 2) +
+  # Label each point with the site
+  geom_text_repel(label = na.omit(LINXII)$State, size = 2.5) + 
+  # Adjust theme
+  theme_classic() +
+  labs(tag = "A") +
+  theme(axis.text = element_text(color = "black"),
+        panel.background = element_rect(color = "black"))
+
+b <- 
+  autoplot(pcaModel, size = 2, colour = "grey",
+           # Add eigenvectors
+           loadings = TRUE, loadings.label = TRUE, loadings.label.size = 3,
+           loadings.label.repel = TRUE, loadings.label.colour = "black") +
+  # Label each point with the site
+  #geom_text_repel(label = na.omit(LINXII)$SiteName, color = "grey") + 
+  # Adjust theme
+  theme_classic() +
+  labs(tag = "B") +
+  theme(axis.text = element_text(color = "black"),
+  panel.background = element_rect(color = "black"))
+
+grid.arrange(a, b, nrow = 2)
+```
+
+# Discussion
+
+# Supplemental Images
+
+![Table 8.7. from Stumm and Morgan 1996, page 474.[@stumm_aquatic_1996 pp. 474].](images/Table8-7.jpeg)
+
+![Figure 8.14. from Stumm and Morgan 1996, page 477.[@stumm_aquatic_1996 pp. 477].](images/Figure8-14.jpeg){height=75%}
+
+## Acknowledgments {.appendix}
+
+We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.
+
+Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 
