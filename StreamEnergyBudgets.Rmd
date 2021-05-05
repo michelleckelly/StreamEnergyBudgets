@@ -24,12 +24,6 @@ output:
     toc_depth: 3
 ---
 
-# Abstract
-
-While we focus on the aerobic processes of gross primary production (GPP) and ecosystem respiration (ER) to parameterize stream metabolism, we also know that anaerobic, energy-releasing processes are common in streams. Denitrification, which releases just 5% less free energy than aerobic respiration, is one such process. We ask: are anaerobic energy-generation pathways significant contributors to stream energy budgets? We measured denitrification (acetylene block) and aerobic metabolism in 25 study streams in the USA (NEON n=13, StreamPULSE n=12), modeling GPP and ER using a one or two-station inverse Bayesian approach. This dataset was supplemented with denitrification (15-N tracer) and metabolism from LINXII (n=28). Areal denitrification and ER rates were converted to rates of energy release using Gibbs free energy values. Total energy released was calculated as free energy from denitrification plus ER. Linear, nonlinear, and tree-based regression models, where the best fit model was determined by testing set performance, were used to determine which environmental variables were most important to predicting the proportion of the total energy budget released via denitrification. Preliminary results show denitrification contributing to as much as 9.6% of the total energy budget of a single stream. 
-
-# Introduction
-
 ```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
 # Load libraries
 library(tidyverse)
@@ -46,6 +40,8 @@ library(svMisc)
 library(ggfortify)
 library(AppliedPredictiveModeling)
 library(caret)
+library(knitr)
+library(kableExtra)
 options(digits=3) # Change rounding to 3 digits
 
 # Colorblind-friendly palette developed by IBM, 2, 4 and 5 color version
@@ -53,6 +49,30 @@ ibm2 <- c("#648FFF", "#ffb000")
 ibm4 <- c("#785EF0", "#DC267F", "#FE6100", "#FFB000")
 ibm5 <- c("#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000")
 ```
+
+# Abstract
+
+While we focus on the aerobic processes of gross primary production (GPP) and ecosystem respiration (ER) to parameterize stream metabolism, we also know that anaerobic, energy-releasing processes are common in streams. Denitrification, which releases just 5% less free energy than aerobic respiration, is one such process. We ask: are anaerobic energy-generation pathways significant contributors to stream energy budgets? We measured denitrification (acetylene block) and aerobic metabolism in 25 study streams in the USA (NEON n=13, StreamPULSE n=12), modeling GPP and ER using a one or two-station inverse Bayesian approach. This dataset was supplemented with denitrification (15-N tracer) and metabolism from LINXII (n=28). Areal denitrification and ER rates were converted to rates of energy release using Gibbs free energy values. Total energy released was calculated as free energy from denitrification plus ER. Linear, nonlinear, and tree-based regression models, where the best fit model was determined by testing set performance, were used to determine which environmental variables were most important to predicting the proportion of the total energy budget released via denitrification. Preliminary results show denitrification contributing to as much as 9.6% of the total energy budget of a single stream. 
+
+# Introduction  
+
+## Stream metabolism = Energy stored - energy released  
+
+```{r slide3, fig.cap="Generally, we conceptualize stream metabolism as the balance between energy storage through gross primary production (GPP) and energy release through ecosystem respiration (ER)."}
+knitr::include_graphics("images/Slide3.png")
+```
+
+## What about anaerobic processes?  
+
+```{r slide4a, fig.cap="We know that the denitrification activity is common in freshwater ecosystems. Figure from Mulholland et al. 2008[@mulholland2008], showing denitrification uptake rates (Uden) in reference (Ref), agricultural (Agr), and urban (Urb) streams from the LINX II study compared to denitrification uptake rates in other rivers, lakes, estuaries, and oceans."}
+knitr::include_graphics("images/Slide4a.png")
+```
+
+```{r slide4b, fig.cap="We also know that denitrification releases just 5% less free energy than aerobic respiration per electron in reaction.[@stumm_aquatic_1996]"}
+knitr::include_graphics("images/Slide4b.png")
+```
+
+Therefore, we ask: **Are anaerobic processes significant contributors to stream energy budgets?**
 
 ```{r energyFunctions, echo = FALSE}
 # Denitrification energy calculation
@@ -208,7 +228,6 @@ rm(nzv)
 rm(dummies)
 ```
 
-
 ```{r plotNEPmonthlymean, eval = F, fig.cap="Time series data of daily NEP (grey lines) and calculated mean NEP for each day of year (colored lines, A), and calculated mean monthly NEP (B) for the period of record. Shaded ribbons (B) represent standard deviation of NEP.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5.5, fig.width = 8, fig.pos="center"}
 # Plot of DOY vs GPP or ER, faceted by site
 a <- 
@@ -333,6 +352,8 @@ grid.arrange(c,d, ncol = 2)
 
 ## Sites and data  
 
+### LINX II Project
+
 ```{r plotMap, eval = F, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 ##### Plot CAREER Site Map #####
 # Pull state map data
@@ -367,7 +388,7 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-```{r plotMapLINXII, fig.cap="Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 49) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+```{r plotMapLINXII, fig.cap="Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 48) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 ##### Plot LINXII and CAREER Site Map #####
 # Merge sites_LINXII with CAREER_sites that we have modeled metabolism for
 # so far
@@ -407,31 +428,83 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-Denitrification rates (as $k_{den}$, $m^{-1}$) were obtained from Mulholland et al. [-@mulholland2009] appendix. Rates were then converted to areal denitirification rates using conversion steps outlined in the methods of Mulholland et al. [-@mulholland2009], where $k_{denT}$ = denitrification rate per unit time ($d^{-1}$), $v$ = average water velocity ($cm ~ s^{-1}$), $v_{fden}$ = denitrification uptake velocity ($cm ~ s^{-1}$), $Q$ = discharge ($L ~ s^{-1}$), $w$ = average stream wetted width ($m$),$U_{den}$ = areal denitirification rate ($mg ~ m^{-2} ~ hr^{-1}$), $C$ = ambient nitrate concentration (ug-N $L^{-1}$).
+Whole-stream **denitrification** rates, measured using **15-N tracer** (as $k_{den}$, $m^{-1}$), were obtained from Mulholland et al. [-@mulholland2009] appendix. Rates were then converted to areal denitrification rates using conversion steps outlined in the methods of Mulholland et al. [-@mulholland2009], where $k_{denT}$ = denitrification rate per unit time ($d^{-1}$), $v$ = average water velocity ($cm ~ s^{-1}$), $v_{fden}$ = denitrification uptake velocity ($cm ~ s^{-1}$), $Q$ = discharge ($L ~ s^{-1}$), $w$ = average stream wetted width ($m$),$U_{den}$ = areal denitirification rate ($mg ~ m^{-2} ~ hr^{-1}$), $C$ = ambient nitrate concentration (ug-N $L^{-1}$).
 
-$$k_{denT} = k_{den} * v * 864$$
+$$
+k_{denT} = k_{den} \times v \times 864
+$$
 
-$$v_{fden} = (Q/w) * k_{den} * 0.1$$
+$$
+v_{fden} = \frac{Q}{w} \times k_{den} \times 0.1
+$$
 
-$$U_{den} = (v_{fden} * C) * 36$$
+$$
+U_{den} = v_{fden} \times C \times 36
+$$
 
-Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information.  
+Modeled **metabolism** (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information.  
 
-## Energy Budget Calculation  
+### Marcarelli nationwide denitrification and N fixation survey  
 
-Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to energy production rates (kCal $m^{-2} ~ hr^{-1}$) using Gibbs free energy ($\Delta G$) values and molar conversion factors from the balanced chemical reactions of each process.
+Denitrification was measured on individual stream substrates using **acetylene inhibition** assays.  
 
-![Gibbs free energy ($\Delta G$) produced by selected reduction and oxidation reactions in natural waters [at pH = 7; see @stumm_aquatic_1996 pp. 474, 477].](images/Table8-7_Handwritten.jpeg)
+Modeled **metabolism** obtained from StreamPULSE repository, https://data.streamPULSE.org.  
 
-![Conversion of denitrification from nitrogen production units of mg-N $m^{-2} ~ hr^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/Denitrification.jpeg)
+## Energy budget calculation  
 
-![Conversion of aerobic respiration from oxygen production units of g-$O_2 ~ m^{-2} ~ day^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/AerobicResp.jpeg)
+Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to energy production rates (kCal $m^{-2} ~ hr^{-1}$) using Gibbs free energy ($\Delta G$) values and molar conversion factors from the balanced chemical reactions of each process [@stumm_aquatic_1996].
 
-## Predictive models
+### Aerobic respiration
 
+$$
+Energy~released~from~ER~=ER~rate~ \times ~ \Delta G_{0}'~ \times ~ e^{-}~in~balanced~reaction
+$$
 
+Where ER rate is in $g~O_{2}~m^{-2}~d^{-1}$, and Gibbs free energy or $\Delta G_{0}'$ is in $kCal~e^{-1}$. Applying unit conversions, where there are 32 $g~O_{2}~mol~O_{2}^{-1}$, 2 mol O per mol $O_{2}$, 1 mol $O_{2}$ per balanced reaction, and 24 hours per day, this becomes energy released from ER in kCal $m^{-2} ~ hr^{-1}$:
 
-# Results
+$$
+Energy~released~from~ER~=ER~rate \times 29.9 \times 4 \div 32 \times 2 \div 24
+$$
+
+### Denitrification
+
+$$
+Energy~released~from~denitrification~=Denitrification~rate~ \times ~ \Delta G_{0}'~ \times ~ e^{-}~in~balanced~reaction
+$$
+
+Where denitrification rate is in $mg~N~m^{-2}~hr^{-1}$, and $\Delta G_{0}'$ is in $kCal~e^{-1}$. Applying unit conversions, where there are 1000 mg per g, 14 $g~N~mol{-1}$, and 2 mol N per balanced reaction, this becomes energy released from denitrification in kCal $m^{-2} ~ hr^{-1}$:
+
+$$
+Energy~released~from~denitrification~=denitrification~rate \times 28.4 \times 10 \div 1000 \div 14 \div 2
+$$
+
+## Predictive modeling approach  
+
+### Pre-processing  
+
+- **Dummy variables** for categorical predictors  
+- Removed **near zero variance** predictors, cutoff ratio = 95/5  
+- **Centered, scaled**  
+
+### Splitting and resampling  
+
+- Data **randomly split** into training and testing sets, **80% training** and **20% testing**  
+- **10-fold cross-validation** for resampling, repeated **10 times**
+
+### Evaluating model performance  
+
+- Best fit model determined by the **lowest** root mean squared error (**RMSE**) on testing set  
+
+### Pre-processed LINX II dataset  
+
+- **28 observations, 28 predictors**  
+  - 8 categorical (ex. state, land use, biome)  
+  - 20 continuous (ex. discharge, reach width, DOC, NO3, SRP, GPP, ER)  
+- **Response:** Energy released from denitrification as a proportion of total energy (%)  
+
+# Results and discussion
+
+## Denitrification as a proportion of total energy
 
 ```{r LINXIIDenitRatevsPercentTotalNRG, fig.cap="LINX II streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Blue points represent sites where the energy contribution from denitrification is greater than expected, red points represent sites where the energy contribution from denitrification is less than expected.", fig.height=6, fig.width=6, fig.pos="H"}
 ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent)) +
@@ -460,48 +533,9 @@ ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent)) +
 #quantile(CAREER$EnergyDenit_percent, na.rm = T)
 ```
 
-```{r CAREERDenitRatevsPercentTotalNRG, fig.cap=" Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=6, fig.width=6, fig.pos="H"}
-ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)), 
-       aes(x = DenitUnamended_Mean_mgNm2hr, y = EnergyDenit_percent, 
-           fill = Substrate)) +
-  geom_abline(slope = 1, intercept = 0, linetype = 2) +
-  # Add data points
-  geom_point(size = 5, aes(shape = Substrate)) +
-  coord_cartesian(xlim = c(0, 10)) +
-  # Theme adjustments
-  theme_classic() +
-  labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
-       y = expression("Energy released from denitrification as a proportion of total energy budget (%)")) +
-  scale_fill_manual(values = ibm4) +
-  scale_shape_manual(values = c(21, 22, 23, 24)) +
-  theme(panel.border = element_rect(color = "black", fill = NA),
-        axis.text = element_text(color = "black"),
-        legend.position = c(0.8, 0.15),
-        legend.background = element_rect(color = "black", fill = NA))
-```
+## Predictive modeling
 
-```{r plotCAREERRates, fig.cap="Denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=6, fig.width = 6, fig.pos="center"}
-#CAREER %>% group_by(Substrate) %>% summarise(median(DenitUnamended_Mean_mgNm2hr, na.rm = T))
-
-# Boxplot of denitrification rates, by substrate
-ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)),
-       aes(y = DenitUnamended_Mean_mgNm2hr, x = Substrate)) +
-  stat_boxplot(geom = "errorbar", width = 0.2) +
-  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
-  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, fill = "white") +
-  # Axis labels and scales
-  xlab(expression("Substrate type")) +
-  ylab(expression("Denitrification rate (mg-N"~m^2~"hr"^{-1}*")")) +
-  scale_fill_manual(values = ibm4) +
-  scale_x_discrete(limits = c("Sediment", "Macrophyte", "Wood", "Rock")) +
-  theme_classic() +
-  theme(axis.text = element_text(color = "black"), 
-        axis.text.y = element_text(size = 8),
-        panel.background = element_rect(color = "black"), 
-        legend.position = "none") 
-```
-
-```{r LINXIIPredictiveModel, eval = F}
+```{r LINXIIPredictiveModel, cache = T, warning=F, message=F, echo=F, results='hide'}
 #### LINX II Predictive Model ####
 # Predictive model to determine importance of predictors for the denitrification
 # proportion of energy budget 
@@ -549,7 +583,7 @@ fitControl <- trainControl(method = "repeatedcv", number = 10,
 set.seed(999)
 plsModel <- train(x = predictors_train, y = response_train, method = "pls", 
                    trControl = fitControl, tuneLength = 20)
-plot(plsModel)
+#plot(plsModel)
 plsPred <- predict(plsModel, newdata = predictors_test)
 plsResults <- postResample(pred = plsPred, obs = response_test)
 
@@ -559,7 +593,7 @@ enetGrid <- expand.grid(.lambda = c(0.001, 0.1, 0.5),
 set.seed(999)
 enetTune <- train(x = predictors_train, y = response_train, method = "enet", 
                   tuneGrid = enetGrid, trControl = fitControl)
-plot(enetTune, main = "Elastic Net Regression")
+#plot(enetTune, main = "Elastic Net Regression")
 # Evaluate test set performance
 enetPredic <- predict(enetTune, predictors_test)
 enetResults <- postResample(pred = enetPredic, obs = response_test)
@@ -570,7 +604,7 @@ set.seed(999)
 nnetModel <- train(x = predictors_train, y = response_train, method = "avNNet", 
                    tuneGrid = nnetGrid,
                    trControl = fitControl)
-plot(nnetModel, main = "neural net")
+#plot(nnetModel, main = "neural net")
 # Evaluate test set performance
 nnetPred <- predict(nnetModel, newdata = predictors_test)
 nnetResults <- postResample(pred = nnetPred, obs = response_test)
@@ -580,7 +614,7 @@ set.seed(999)
 marsModel <- train(x = predictors_train, y = response_train, method = "earth", 
                    tuneGrid = expand.grid(.degree = 1:2, .nprune = 2:30),
                    trControl = fitControl)
-plot(marsModel, main = "MARS")
+#plot(marsModel, main = "MARS")
 # Evaluate test set performance
 marsPred <- predict(marsModel, newdata = predictors_test)
 marsResults <- postResample(pred = marsPred, obs = response_test)
@@ -591,7 +625,7 @@ library(kernlab)
 set.seed(999)
 svmRTuned <- train(x = predictors_train, y = response_train, method = "svmRadial",
                    tuneLength = 9, trControl = fitControl)
-plot(svmRTuned, main = "Radial SVM")
+#plot(svmRTuned, main = "Radial SVM")
 # Evaluate test set performance
 svmRPred <- predict(svmRTuned, newdata = predictors_test)
 svmRResults <- postResample(pred = svmRPred, obs = response_test)
@@ -600,7 +634,7 @@ svmRResults <- postResample(pred = svmRPred, obs = response_test)
 set.seed(999)
 knnTune <- train(x = predictors_train, y = response_train, method = "knn", 
                  tuneGrid = data.frame(.k = 1:10), trControl = fitControl)
-plot(knnTune, main = "KNN")
+#plot(knnTune, main = "KNN")
 # Evaluate test set performance
 knnPred <- predict(knnTune, newdata = predictors_test)
 knnResults <- postResample(pred = knnPred, obs = response_test)
@@ -611,7 +645,7 @@ set.seed(999)
 forestTune <- train(x = predictors_train, y = response_train, 
                         method = "cforest", 
                         trControl = fitControl)
-plot(forestTune)
+#plot(forestTune)
 # Evaluate test set performance
 forestPred <- predict(forestTune, newdata = predictors_test)
 forestResults <- postResample(pred = forestPred, obs = response_test)
@@ -623,27 +657,76 @@ gbmGrid <- expand.grid(interaction.depth = seq(1, 7, by = 2),
 boostTune <- train(x = predictors_train, y = response_train, 
                         method = "gbm", tuneGrid = gbmGrid, verbose = F,
                         trControl = fitControl)
-plot(boostTune)
+#plot(boostTune)
 boostPred <- predict(boostTune, newdata = predictors_test)
 boostResults <- postResample(pred = boostPred, obs = response_test)
 
 # Display fit results
-data.frame(plsResults, enetResults, nnetResults, marsResults, svmRResults, knnResults, forestResults, boostResults)
-
-# pls partial least squares
-# ridge regression
-# elastic net
-
-#defaultSummary(data.frame(obs = testResponse, pred = enetPredic))
-# f. which predictors are most important?
-plot(varImp(enetTune), 5, 
-     main = "Importance of Predictors according to Linear Elastic Net")
-
-# Explore predictor importance from best fit model (lowest RMSE)
-plot(varImp(marsModel), 2, 
-     main = "Importance of Predictors")
-plot(marsModel$finalModel)
+LINXIIRMSE <- data.frame(plsResults, enetResults, nnetResults, marsResults, 
+                         svmRResults, knnResults, forestResults, boostResults)
 ```
+
+```{r RMSEtable}
+# Display table
+LINXIIRMSE %>%
+  rename(PLS = plsResults, "Elastic net" = enetResults, 
+         "Neural net" = nnetResults, MARS = marsResults, 
+         "Radial SVM" = svmRResults, KNN = knnResults, 
+         "Random forest" = forestResults, "Boosted trees" = boostResults) %>%
+  kable(caption = "Summary of model performance on testing set.", 
+        booktabs = T) %>%
+  column_spec(5, bold = T)
+```
+
+```{r variableImportancePlot, fig.height=4, fig.width=4, fig.pos="H", fig.cap = "Most important predictors for best fit model (MARS) predicting denitrification proportion of energy budget (%) in LINX II streams."}
+# Explore predictor importance from best fit model (lowest RMSE)
+plot(varImp(marsModel), 2, col = "black")
+```
+
+## Breakdown by substrate
+
+```{r CAREERDenitRatevsPercentTotalNRG, fig.cap="Substrates with the highest rates of denitrification may be contributing the least amount to the total energy budget. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Data is from a subset of 7 streams from the Marcarelli Nationwide Survey (total n = 21).", fig.height=6, fig.width=6, fig.pos="H"}
+ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)), 
+       aes(x = DenitUnamended_Mean_mgNm2hr, y = EnergyDenit_percent, 
+           fill = Substrate)) +
+  geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  # Add data points
+  geom_point(size = 5, aes(shape = Substrate)) +
+  coord_cartesian(xlim = c(0, 10)) +
+  # Theme adjustments
+  theme_classic() +
+  labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
+       y = expression("Energy released from denitrification as a proportion of total energy budget (%)")) +
+  scale_fill_manual(values = ibm4) +
+  scale_shape_manual(values = c(21, 22, 23, 24)) +
+  theme(panel.border = element_rect(color = "black", fill = NA),
+        axis.text = element_text(color = "black"),
+        legend.position = c(0.8, 0.15),
+        legend.background = element_rect(color = "black", fill = NA))
+```
+
+```{r plotCAREERRates, fig.cap="Denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=6, fig.width = 6, fig.pos="center"}
+#CAREER %>% group_by(Substrate) %>% summarise(median(DenitUnamended_Mean_mgNm2hr, na.rm = T))
+
+# Boxplot of denitrification rates, by substrate
+ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)),
+       aes(y = DenitUnamended_Mean_mgNm2hr, x = Substrate)) +
+  stat_boxplot(geom = "errorbar", width = 0.2) +
+  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
+  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, fill = "white") +
+  # Axis labels and scales
+  xlab(expression("Substrate type")) +
+  ylab(expression("Denitrification rate (mg-N"~m^2~"hr"^{-1}*")")) +
+  scale_fill_manual(values = ibm4) +
+  scale_x_discrete(limits = c("Sediment", "Macrophyte", "Wood", "Rock")) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.y = element_text(size = 8),
+        panel.background = element_rect(color = "black"), 
+        legend.position = "none") 
+```
+
+# Further directions
 
 ```{r CAREERPredictiveModel,eval=F}
 dataFrameName <- subset(CAREER_numeric, !is.na(EnergyTot_kCalm2hr)) %>% 
@@ -769,7 +852,6 @@ b <-
 grid.arrange(a, b, nrow = 2)
 ```
 
-# Discussion
 
 # Supplemental Images
 
@@ -779,10 +861,10 @@ grid.arrange(a, b, nrow = 2)
 
 ## Acknowledgments {.appendix}
 
-We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.
+**Marcarelli Nationwide Denitrification and N2 Fixation Survey:** We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.
 
-Funding for the Lotic Intersite Nitrogen eXperiment II (LINX-II) project was provided by the National Science Foundation Division of Environmental Biology (NSF Grant DEB-0111410). Raw data collected by LINX-II is available from the Environmental Data Initiative repository here: https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc. Whole-stream denitrification rates measured using 15-N tracers are from from Mulholland et al. 2009 Supplemental, https://www.doi.org/10.4319/lo.2009.54.3.0666. Modeled metabolism data obtained from Bernot et al. 2010 Supplemental, https://www.doi.org/10.1111/j.1365-2427.2010.02422.x.
+**Lotic Intersite Nitrogen eXperiment II (LINX-II):** Funding for the Lotic Intersite Nitrogen eXperiment II (LINX-II) project was provided by the National Science Foundation Division of Environmental Biology (NSF Grant DEB-0111410). Raw data collected by LINX-II is available from the Environmental Data Initiative repository here: https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc. Whole-stream denitrification rates measured using 15-N tracers are from from Mulholland et al. 2009 Supplemental, https://www.doi.org/10.4319/lo.2009.54.3.0666. Modeled metabolism data obtained from Bernot et al. 2010 Supplemental, https://www.doi.org/10.1111/j.1365-2427.2010.02422.x.
 
-Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). https://data.streamPULSE.org 
+**StreamPULSE Network:** Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). https://data.streamPULSE.org 
 
-The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 
+**National Ecological Observatory Network (NEON):** We especially thank Kaelin Cawley, Keli Goodman, and Bobby Hensley for their assistance with metabolism modeling efforts. The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 

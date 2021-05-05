@@ -1271,6 +1271,7 @@
 
   <!--/radix_placeholder_distill-->
   <script src="site_libs/header-attrs-2.1/header-attrs.js"></script>
+  <script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
   <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
   <script src="site_libs/bowser-1.9.3/bowser.min.js"></script>
   <script src="site_libs/webcomponents-2.0.0/webcomponents.js"></script>
@@ -1363,15 +1364,38 @@
 <nav class="d-toc" id="TOC">
 <ul>
 <li><a href="#abstract">Abstract</a></li>
-<li><a href="#introduction">Introduction</a></li>
+<li><a href="#introduction">Introduction</a>
+<ul>
+<li><a href="#stream-metabolism-energy-stored---energy-released">Stream metabolism = Energy stored - energy released</a></li>
+<li><a href="#what-about-anaerobic-processes">What about anaerobic processes?</a></li>
+</ul></li>
 <li><a href="#methods">Methods</a>
 <ul>
-<li><a href="#sites-and-data">Sites and data</a></li>
-<li><a href="#energy-budget-calculation">Energy Budget Calculation</a></li>
-<li><a href="#predictive-models">Predictive models</a></li>
+<li><a href="#sites-and-data">Sites and data</a>
+<ul>
+<li><a href="#linx-ii-project">LINX II Project</a></li>
+<li><a href="#marcarelli-nationwide-denitrification-and-n-fixation-survey">Marcarelli nationwide denitrification and N fixation survey</a></li>
 </ul></li>
-<li><a href="#results">Results</a></li>
-<li><a href="#discussion">Discussion</a></li>
+<li><a href="#energy-budget-calculation">Energy budget calculation</a>
+<ul>
+<li><a href="#aerobic-respiration">Aerobic respiration</a></li>
+<li><a href="#denitrification">Denitrification</a></li>
+</ul></li>
+<li><a href="#predictive-modeling-approach">Predictive modeling approach</a>
+<ul>
+<li><a href="#pre-processing">Pre-processing</a></li>
+<li><a href="#splitting-and-resampling">Splitting and resampling</a></li>
+<li><a href="#evaluating-model-performance">Evaluating model performance</a></li>
+<li><a href="#pre-processed-linx-ii-dataset">Pre-processed LINX II dataset</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#results-and-discussion">Results and discussion</a>
+<ul>
+<li><a href="#denitrification-as-a-proportion-of-total-energy">Denitrification as a proportion of total energy</a></li>
+<li><a href="#predictive-modeling">Predictive modeling</a></li>
+<li><a href="#breakdown-by-substrate">Breakdown by substrate</a></li>
+</ul></li>
+<li><a href="#further-directions">Further directions</a></li>
 <li><a href="#supplemental-images">Supplemental Images</a>
 <ul>
 <li><a href="#acknowledgments">Acknowledgments</a></li>
@@ -1379,12 +1403,39 @@
 </ul>
 </nav>
 <hr class="d-toc-separator"/>
-<h1 id="abstract">Abstract</h1>
-<p>While we focus on the aerobic processes of gross primary production (GPP) and ecosystem respiration (ER) to parameterize stream metabolism, we also know that anaerobic, energy-releasing processes are common in streams. Denitrification, which releases just 5% less free energy than aerobic respiration, is one such process. We ask: are anaerobic energy-generation pathways significant contributors to stream energy budgets? We measured denitrification (acetylene block) and aerobic metabolism in 25 study streams in the USA (NEON n=13, StreamPULSE n=12), modeling GPP and ER using a one or two-station inverse Bayesian approach. This dataset was supplemented with denitrification (15-N tracer) and metabolism from LINXII (n=28). Areal denitrification and ER rates were converted to rates of energy release using Gibbs free energy values. Total energy released was calculated as free energy from denitrification plus ER. Linear, nonlinear, and tree-based regression models, where the best fit model was determined by testing set performance, were used to determine which environmental variables were most important to predicting the proportion of the total energy budget released via denitrification. Preliminary results show denitrification contributing to as much as 9.6% of the total energy budget of a single stream.</p>
-<h1 id="introduction">Introduction</h1>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
+<h1 id="abstract">Abstract</h1>
+<p>While we focus on the aerobic processes of gross primary production (GPP) and ecosystem respiration (ER) to parameterize stream metabolism, we also know that anaerobic, energy-releasing processes are common in streams. Denitrification, which releases just 5% less free energy than aerobic respiration, is one such process. We ask: are anaerobic energy-generation pathways significant contributors to stream energy budgets? We measured denitrification (acetylene block) and aerobic metabolism in 25 study streams in the USA (NEON n=13, StreamPULSE n=12), modeling GPP and ER using a one or two-station inverse Bayesian approach. This dataset was supplemented with denitrification (15-N tracer) and metabolism from LINXII (n=28). Areal denitrification and ER rates were converted to rates of energy release using Gibbs free energy values. Total energy released was calculated as free energy from denitrification plus ER. Linear, nonlinear, and tree-based regression models, where the best fit model was determined by testing set performance, were used to determine which environmental variables were most important to predicting the proportion of the total energy budget released via denitrification. Preliminary results show denitrification contributing to as much as 9.6% of the total energy budget of a single stream.</p>
+<h1 id="introduction">Introduction</h1>
+<h2 id="stream-metabolism-energy-stored---energy-released">Stream metabolism = Energy stored - energy released</h2>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure"><span id="fig:slide3"></span>
+<img src="images/Slide3.png" alt="Generally, we conceptualize stream metabolism as the balance between energy storage through gross primary production (GPP) and energy release through ecosystem respiration (ER)." width="634" />
+<p class="caption">
+Figure 1: Generally, we conceptualize stream metabolism as the balance between energy storage through gross primary production (GPP) and energy release through ecosystem respiration (ER).
+</p>
+</div>
+</div>
+<h2 id="what-about-anaerobic-processes">What about anaerobic processes?</h2>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure"><span id="fig:slide4a"></span>
+<img src="images/Slide4a.png" alt="We know that the denitrification activity is common in freshwater ecosystems. Figure from Mulholland et al. 2008[@mulholland2008], showing denitrification uptake rates (Uden) in reference (Ref), agricultural (Agr), and urban (Urb) streams from the LINX II study compared to denitrification uptake rates in other rivers, lakes, estuaries, and oceans." width="290" />
+<p class="caption">
+Figure 2: We know that the denitrification activity is common in freshwater ecosystems. Figure from Mulholland et al. 2008<span class="citation" data-cites="mulholland2008">(Mulholland et al. <a href="#ref-mulholland2008" role="doc-biblioref">2008</a>)</span>, showing denitrification uptake rates (Uden) in reference (Ref), agricultural (Agr), and urban (Urb) streams from the LINX II study compared to denitrification uptake rates in other rivers, lakes, estuaries, and oceans.
+</p>
+</div>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure"><span id="fig:slide4b"></span>
+<img src="images/Slide4b.png" alt="We also know that denitrification releases just 5% less free energy than aerobic respiration per electron in reaction.[@stumm_aquatic_1996]" width="602" />
+<p class="caption">
+Figure 3: We also know that denitrification releases just 5% less free energy than aerobic respiration per electron in reaction.<span class="citation" data-cites="stumm_aquatic_1996">(Stumm and Morgan <a href="#ref-stumm_aquatic_1996" role="doc-biblioref">1996</a>)</span>
+</p>
+</div>
+</div>
+<p>Therefore, we ask: <strong>Are anaerobic processes significant contributors to stream energy budgets?</strong></p>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
@@ -1402,48 +1453,234 @@
 </div>
 <h1 id="methods">Methods</h1>
 <h2 id="sites-and-data">Sites and data</h2>
+<h3 id="linx-ii-project">LINX II Project</h3>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:plotMapLINXII"></span>
-<img src="StreamEnergyBudgets_files/figure-html5/plotMapLINXII-1.png" alt="Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 49) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site." width="960" />
+<img src="StreamEnergyBudgets_files/figure-html5/plotMapLINXII-1.png" alt="Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 48) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site." width="960" />
 <p class="caption">
-Figure 1: Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 49) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site.
+Figure 4: Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 48) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site.
 </p>
 </div>
 </div>
-<p>Denitrification rates (as <span class="math inline">\(k_{den}\)</span>, <span class="math inline">\(m^{-1}\)</span>) were obtained from Mulholland et al. <span class="citation" data-cites="mulholland2009">(<a href="#ref-mulholland2009" role="doc-biblioref">2009</a>)</span> appendix. Rates were then converted to areal denitirification rates using conversion steps outlined in the methods of Mulholland et al. <span class="citation" data-cites="mulholland2009">(<a href="#ref-mulholland2009" role="doc-biblioref">2009</a>)</span>, where <span class="math inline">\(k_{denT}\)</span> = denitrification rate per unit time (<span class="math inline">\(d^{-1}\)</span>), <span class="math inline">\(v\)</span> = average water velocity (<span class="math inline">\(cm ~ s^{-1}\)</span>), <span class="math inline">\(v_{fden}\)</span> = denitrification uptake velocity (<span class="math inline">\(cm ~ s^{-1}\)</span>), <span class="math inline">\(Q\)</span> = discharge (<span class="math inline">\(L ~ s^{-1}\)</span>), <span class="math inline">\(w\)</span> = average stream wetted width (<span class="math inline">\(m\)</span>),<span class="math inline">\(U_{den}\)</span> = areal denitirification rate (<span class="math inline">\(mg ~ m^{-2} ~ hr^{-1}\)</span>), <span class="math inline">\(C\)</span> = ambient nitrate concentration (ug-N <span class="math inline">\(L^{-1}\)</span>).</p>
-<p><span class="math display">\[k_{denT} = k_{den} * v * 864\]</span></p>
-<p><span class="math display">\[v_{fden} = (Q/w) * k_{den} * 0.1\]</span></p>
-<p><span class="math display">\[U_{den} = (v_{fden} * C) * 36\]</span></p>
-<p>Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. <span class="citation" data-cites="bernot2010">(<a href="#ref-bernot2010" role="doc-biblioref">2010</a>)</span> supplemental information.</p>
-<h2 id="energy-budget-calculation">Energy Budget Calculation</h2>
-<p>Process rates (ex. denitrification in mg-N <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span>) were converted to energy production rates (kCal <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span>) using Gibbs free energy (<span class="math inline">\(\Delta G\)</span>) values and molar conversion factors from the balanced chemical reactions of each process.</p>
-<figure>
-<img src="images/Table8-7_Handwritten.jpeg" alt="Gibbs free energy (\Delta G) produced by selected reduction and oxidation reactions in natural waters at pH = 7; see pp. 474, 477(at pH = 7; see Stumm and Morgan 1996, 474, 477)." /><figcaption aria-hidden="true">Gibbs free energy (<span class="math inline">\(\Delta G\)</span>) produced by selected reduction and oxidation reactions in natural waters <span class="citation" data-cites="stumm_aquatic_1996">(at pH = 7; see Stumm and Morgan <a href="#ref-stumm_aquatic_1996" role="doc-biblioref">1996</a>, 474, 477)</span>.</figcaption>
-</figure>
-<figure>
-<img src="images/Denitrification.jpeg" alt="Conversion of denitrification from nitrogen production units of mg-N m^{-2} ~ hr^{-1} to energy production units of kCal m^{-2} ~ hr^{-1}" /><figcaption aria-hidden="true">Conversion of denitrification from nitrogen production units of mg-N <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span> to energy production units of kCal <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span></figcaption>
-</figure>
-<figure>
-<img src="images/AerobicResp.jpeg" alt="Conversion of aerobic respiration from oxygen production units of g-O_2 ~ m^{-2} ~ day^{-1} to energy production units of kCal m^{-2} ~ hr^{-1}" /><figcaption aria-hidden="true">Conversion of aerobic respiration from oxygen production units of g-<span class="math inline">\(O_2 ~ m^{-2} ~ day^{-1}\)</span> to energy production units of kCal <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span></figcaption>
-</figure>
-<h2 id="predictive-models">Predictive models</h2>
-<h1 id="results">Results</h1>
+<p>Whole-stream <strong>denitrification</strong> rates, measured using <strong>15-N tracer</strong> (as <span class="math inline">\(k_{den}\)</span>, <span class="math inline">\(m^{-1}\)</span>), were obtained from Mulholland et al. <span class="citation" data-cites="mulholland2009">(<a href="#ref-mulholland2009" role="doc-biblioref">2009</a>)</span> appendix. Rates were then converted to areal denitrification rates using conversion steps outlined in the methods of Mulholland et al. <span class="citation" data-cites="mulholland2009">(<a href="#ref-mulholland2009" role="doc-biblioref">2009</a>)</span>, where <span class="math inline">\(k_{denT}\)</span> = denitrification rate per unit time (<span class="math inline">\(d^{-1}\)</span>), <span class="math inline">\(v\)</span> = average water velocity (<span class="math inline">\(cm ~ s^{-1}\)</span>), <span class="math inline">\(v_{fden}\)</span> = denitrification uptake velocity (<span class="math inline">\(cm ~ s^{-1}\)</span>), <span class="math inline">\(Q\)</span> = discharge (<span class="math inline">\(L ~ s^{-1}\)</span>), <span class="math inline">\(w\)</span> = average stream wetted width (<span class="math inline">\(m\)</span>),<span class="math inline">\(U_{den}\)</span> = areal denitirification rate (<span class="math inline">\(mg ~ m^{-2} ~ hr^{-1}\)</span>), <span class="math inline">\(C\)</span> = ambient nitrate concentration (ug-N <span class="math inline">\(L^{-1}\)</span>).</p>
+<p><span class="math display">\[
+k_{denT} = k_{den} \times v \times 864
+\]</span></p>
+<p><span class="math display">\[
+v_{fden} = \frac{Q}{w} \times k_{den} \times 0.1
+\]</span></p>
+<p><span class="math display">\[
+U_{den} = v_{fden} \times C \times 36
+\]</span></p>
+<p>Modeled <strong>metabolism</strong> (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. <span class="citation" data-cites="bernot2010">(<a href="#ref-bernot2010" role="doc-biblioref">2010</a>)</span> supplemental information.</p>
+<h3 id="marcarelli-nationwide-denitrification-and-n-fixation-survey">Marcarelli nationwide denitrification and N fixation survey</h3>
+<p>Denitrification was measured on individual stream substrates using <strong>acetylene inhibition</strong> assays.</p>
+<p>Modeled <strong>metabolism</strong> obtained from StreamPULSE repository, <a href="https://data.streamPULSE.org" class="uri">https://data.streamPULSE.org</a>.</p>
+<h2 id="energy-budget-calculation">Energy budget calculation</h2>
+<p>Process rates (ex. denitrification in mg-N <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span>) were converted to energy production rates (kCal <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span>) using Gibbs free energy (<span class="math inline">\(\Delta G\)</span>) values and molar conversion factors from the balanced chemical reactions of each process <span class="citation" data-cites="stumm_aquatic_1996">(Stumm and Morgan <a href="#ref-stumm_aquatic_1996" role="doc-biblioref">1996</a>)</span>.</p>
+<h3 id="aerobic-respiration">Aerobic respiration</h3>
+<p><span class="math display">\[
+Energy~released~from~ER~=ER~rate~ \times ~ \Delta G_{0}&#39;~ \times ~ e^{-}~in~balanced~reaction
+\]</span></p>
+<p>Where ER rate is in <span class="math inline">\(g~O_{2}~m^{-2}~d^{-1}\)</span>, and Gibbs free energy or <span class="math inline">\(\Delta G_{0}&#39;\)</span> is in <span class="math inline">\(kCal~e^{-1}\)</span>. Applying unit conversions, where there are 32 <span class="math inline">\(g~O_{2}~mol~O_{2}^{-1}\)</span>, 2 mol O per mol <span class="math inline">\(O_{2}\)</span>, 1 mol <span class="math inline">\(O_{2}\)</span> per balanced reaction, and 24 hours per day, this becomes energy released from ER in kCal <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span>:</p>
+<p><span class="math display">\[
+Energy~released~from~ER~=ER~rate \times 29.9 \times 4 \div 32 \times 2 \div 24
+\]</span></p>
+<h3 id="denitrification">Denitrification</h3>
+<p><span class="math display">\[
+Energy~released~from~denitrification~=Denitrification~rate~ \times ~ \Delta G_{0}&#39;~ \times ~ e^{-}~in~balanced~reaction
+\]</span></p>
+<p>Where denitrification rate is in <span class="math inline">\(mg~N~m^{-2}~hr^{-1}\)</span>, and <span class="math inline">\(\Delta G_{0}&#39;\)</span> is in <span class="math inline">\(kCal~e^{-1}\)</span>. Applying unit conversions, where there are 1000 mg per g, 14 <span class="math inline">\(g~N~mol{-1}\)</span>, and 2 mol N per balanced reaction, this becomes energy released from denitrification in kCal <span class="math inline">\(m^{-2} ~ hr^{-1}\)</span>:</p>
+<p><span class="math display">\[
+Energy~released~from~denitrification~=denitrification~rate \times 28.4 \times 10 \div 1000 \div 14 \div 2
+\]</span></p>
+<h2 id="predictive-modeling-approach">Predictive modeling approach</h2>
+<h3 id="pre-processing">Pre-processing</h3>
+<ul>
+<li><strong>Dummy variables</strong> for categorical predictors<br />
+</li>
+<li>Removed <strong>near zero variance</strong> predictors, cutoff ratio = 95/5<br />
+</li>
+<li><strong>Centered, scaled</strong></li>
+</ul>
+<h3 id="splitting-and-resampling">Splitting and resampling</h3>
+<ul>
+<li>Data <strong>randomly split</strong> into training and testing sets, <strong>80% training</strong> and <strong>20% testing</strong><br />
+</li>
+<li><strong>10-fold cross-validation</strong> for resampling, repeated <strong>10 times</strong></li>
+</ul>
+<h3 id="evaluating-model-performance">Evaluating model performance</h3>
+<ul>
+<li>Best fit model determined by the <strong>lowest</strong> root mean squared error (<strong>RMSE</strong>) on testing set</li>
+</ul>
+<h3 id="pre-processed-linx-ii-dataset">Pre-processed LINX II dataset</h3>
+<ul>
+<li><strong>28 observations, 28 predictors</strong>
+<ul>
+<li>8 categorical (ex. state, land use, biome)<br />
+</li>
+<li>20 continuous (ex. discharge, reach width, DOC, NO3, SRP, GPP, ER)<br />
+</li>
+</ul></li>
+<li><strong>Response:</strong> Energy released from denitrification as a proportion of total energy (%)</li>
+</ul>
+<h1 id="results-and-discussion">Results and discussion</h1>
+<h2 id="denitrification-as-a-proportion-of-total-energy">Denitrification as a proportion of total energy</h2>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:LINXIIDenitRatevsPercentTotalNRG"></span>
 <img src="StreamEnergyBudgets_files/figure-html5/LINXIIDenitRatevsPercentTotalNRG-1.png" alt="LINX II streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Blue points represent sites where the energy contribution from denitrification is greater than expected, red points represent sites where the energy contribution from denitrification is less than expected." width="576" />
 <p class="caption">
-Figure 2: LINX II streams with ‘low’ denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Blue points represent sites where the energy contribution from denitrification is greater than expected, red points represent sites where the energy contribution from denitrification is less than expected.
+Figure 5: LINX II streams with ‘low’ denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Blue points represent sites where the energy contribution from denitrification is greater than expected, red points represent sites where the energy contribution from denitrification is less than expected.
 </p>
 </div>
 </div>
+<h2 id="predictive-modeling">Predictive modeling</h2>
+<div class="layout-chunk" data-layout="l-body">
+
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<table>
+<caption>
+<span id="tab:RMSEtable">Table 1: </span>Summary of model performance on testing set.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+PLS
+</th>
+<th style="text-align:right;">
+Elastic net
+</th>
+<th style="text-align:right;">
+Neural net
+</th>
+<th style="text-align:right;">
+MARS
+</th>
+<th style="text-align:right;">
+Radial SVM
+</th>
+<th style="text-align:right;">
+KNN
+</th>
+<th style="text-align:right;">
+Random forest
+</th>
+<th style="text-align:right;">
+Boosted trees
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+RMSE
+</td>
+<td style="text-align:right;">
+0.548
+</td>
+<td style="text-align:right;">
+0.423
+</td>
+<td style="text-align:right;">
+0.526
+</td>
+<td style="text-align:right;font-weight: bold;">
+0.394
+</td>
+<td style="text-align:right;">
+0.507
+</td>
+<td style="text-align:right;">
+0.530
+</td>
+<td style="text-align:right;">
+0.493
+</td>
+<td style="text-align:right;">
+0.518
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rsquared
+</td>
+<td style="text-align:right;">
+0.125
+</td>
+<td style="text-align:right;">
+0.572
+</td>
+<td style="text-align:right;">
+0.724
+</td>
+<td style="text-align:right;font-weight: bold;">
+0.837
+</td>
+<td style="text-align:right;">
+0.023
+</td>
+<td style="text-align:right;">
+0.022
+</td>
+<td style="text-align:right;">
+0.040
+</td>
+<td style="text-align:right;">
+0.036
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MAE
+</td>
+<td style="text-align:right;">
+0.525
+</td>
+<td style="text-align:right;">
+0.345
+</td>
+<td style="text-align:right;">
+0.506
+</td>
+<td style="text-align:right;font-weight: bold;">
+0.299
+</td>
+<td style="text-align:right;">
+0.405
+</td>
+<td style="text-align:right;">
+0.513
+</td>
+<td style="text-align:right;">
+0.431
+</td>
+<td style="text-align:right;">
+0.482
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure"><span id="fig:variableImportancePlot"></span>
+<img src="StreamEnergyBudgets_files/figure-html5/variableImportancePlot-1.png" alt="Most important predictors for best fit model (MARS) predicting denitrification proportion of energy budget (%) in LINX II streams." width="384" />
+<p class="caption">
+Figure 6: Most important predictors for best fit model (MARS) predicting denitrification proportion of energy budget (%) in LINX II streams.
+</p>
+</div>
+</div>
+<h2 id="breakdown-by-substrate">Breakdown by substrate</h2>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure"><span id="fig:CAREERDenitRatevsPercentTotalNRG"></span>
-<img src="StreamEnergyBudgets_files/figure-html5/CAREERDenitRatevsPercentTotalNRG-1.png" alt=" Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification." width="576" />
+<img src="StreamEnergyBudgets_files/figure-html5/CAREERDenitRatevsPercentTotalNRG-1.png" alt="Substrates with the highest rates of denitrification may be contributing the least amount to the total energy budget. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Data is from a subset of 7 streams from the Marcarelli Nationwide Survey (total n = 21)." width="576" />
 <p class="caption">
-Figure 3:  Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.
+Figure 7: Substrates with the highest rates of denitrification may be contributing the least amount to the total energy budget. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Data is from a subset of 7 streams from the Marcarelli Nationwide Survey (total n = 21).
 </p>
 </div>
 </div>
@@ -1451,20 +1688,17 @@ Figure 3:  Dashed line has a slope of 1, representing a denitrification rate pro
 <div class="figure"><span id="fig:plotCAREERRates"></span>
 <img src="StreamEnergyBudgets_files/figure-html5/plotCAREERRates-1.png" alt="Denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median." width="576" />
 <p class="caption">
-Figure 4: Denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.
+Figure 8: Denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.
 </p>
 </div>
 </div>
+<h1 id="further-directions">Further directions</h1>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
 <div class="layout-chunk" data-layout="l-body">
 
 </div>
-<div class="layout-chunk" data-layout="l-body">
-
-</div>
-<h1 id="discussion">Discussion</h1>
 <h1 id="supplemental-images">Supplemental Images</h1>
 <figure>
 <img src="images/Table8-7.jpeg" alt="Table 8.7. from Stumm and Morgan 1996, page 474. pp. 474(Stumm and Morgan 1996, 474)." /><figcaption aria-hidden="true">Table 8.7. from Stumm and Morgan 1996, page 474.<span class="citation" data-cites="stumm_aquatic_1996">(Stumm and Morgan <a href="#ref-stumm_aquatic_1996" role="doc-biblioref">1996</a>, 474)</span>.</figcaption>
@@ -1473,16 +1707,19 @@ Figure 4: Denitrification rates (n = 71) measured on multiple substrates (macrop
 <img src="images/Figure8-14.jpeg" style="height:75.0%" alt="Figure 8.14. from Stumm and Morgan 1996, page 477. pp. 477(Stumm and Morgan 1996, 477)." /><figcaption aria-hidden="true">Figure 8.14. from Stumm and Morgan 1996, page 477.<span class="citation" data-cites="stumm_aquatic_1996">(Stumm and Morgan <a href="#ref-stumm_aquatic_1996" role="doc-biblioref">1996</a>, 477)</span>.</figcaption>
 </figure>
 <h2 class="appendix" id="acknowledgments">Acknowledgments</h2>
-<p>We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.</p>
-<p>Funding for the Lotic Intersite Nitrogen eXperiment II (LINX-II) project was provided by the National Science Foundation Division of Environmental Biology (NSF Grant DEB-0111410). Raw data collected by LINX-II is available from the Environmental Data Initiative repository here: <a href="https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc" class="uri">https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc</a>. Whole-stream denitrification rates measured using 15-N tracers are from from Mulholland et al. 2009 Supplemental, <a href="https://www.doi.org/10.4319/lo.2009.54.3.0666" class="uri">https://www.doi.org/10.4319/lo.2009.54.3.0666</a>. Modeled metabolism data obtained from Bernot et al. 2010 Supplemental, <a href="https://www.doi.org/10.1111/j.1365-2427.2010.02422.x" class="uri">https://www.doi.org/10.1111/j.1365-2427.2010.02422.x</a>.</p>
-<p>Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). <a href="https://data.streamPULSE.org" class="uri">https://data.streamPULSE.org</a></p>
-<p>The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program.</p>
+<p><strong>Marcarelli Nationwide Denitrification and N2 Fixation Survey:</strong> We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.</p>
+<p><strong>Lotic Intersite Nitrogen eXperiment II (LINX-II):</strong> Funding for the Lotic Intersite Nitrogen eXperiment II (LINX-II) project was provided by the National Science Foundation Division of Environmental Biology (NSF Grant DEB-0111410). Raw data collected by LINX-II is available from the Environmental Data Initiative repository here: <a href="https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc" class="uri">https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc</a>. Whole-stream denitrification rates measured using 15-N tracers are from from Mulholland et al. 2009 Supplemental, <a href="https://www.doi.org/10.4319/lo.2009.54.3.0666" class="uri">https://www.doi.org/10.4319/lo.2009.54.3.0666</a>. Modeled metabolism data obtained from Bernot et al. 2010 Supplemental, <a href="https://www.doi.org/10.1111/j.1365-2427.2010.02422.x" class="uri">https://www.doi.org/10.1111/j.1365-2427.2010.02422.x</a>.</p>
+<p><strong>StreamPULSE Network:</strong> Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). <a href="https://data.streamPULSE.org" class="uri">https://data.streamPULSE.org</a></p>
+<p><strong>National Ecological Observatory Network (NEON):</strong> We especially thank Kaelin Cawley, Keli Goodman, and Bobby Hensley for their assistance with metabolism modeling efforts. The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program.</p>
 <div id="refs" class="references hanging-indent" role="doc-bibliography">
 <div id="ref-bernot2010">
 <p>Bernot, Melody J., Daniel J. Sobota, Robert O. Hall Jr, Patrick J. Mulholland, Walter K. Dodds, Jackson R. Webster, Jennifer L. Tank, et al. 2010. “Inter-Regional Comparison of Land-Use Effects on Stream Metabolism.” <em>Freshwater Biology</em> 55 (9): 1874–90. <a href="https://doi.org/10.1111/j.1365-2427.2010.02422.x">https://doi.org/10.1111/j.1365-2427.2010.02422.x</a>.</p>
 </div>
 <div id="ref-mulholland2009">
 <p>Mulholland, Patrick J., Robert O. Hall Jr., Daniel J. Sobota, Walter K. Dodds, Stuart E. G. Findlay, Nancy B. Grimm, Stephen K. Hamilton, et al. 2009. “Nitrate Removal in Stream Ecosystems Measured by 15N Addition Experiments: Denitrification.” <em>Limnology and Oceanography</em> 54 (3): 666–80. <a href="https://doi.org/10.4319/lo.2009.54.3.0666">https://doi.org/10.4319/lo.2009.54.3.0666</a>.</p>
+</div>
+<div id="ref-mulholland2008">
+<p>Mulholland, Patrick J., Ashley M. Helton, Geoffrey C. Poole, Robert O. Hall, Stephen K. Hamilton, Bruce J. Peterson, Jennifer L. Tank, et al. 2008. “Stream Denitrification Across Biomes and Its Response to Anthropogenic Nitrate Loading.” <em>Nature</em> 452 (7184): 202–5. <a href="https://doi.org/10.1038/nature06686">https://doi.org/10.1038/nature06686</a>.</p>
 </div>
 <div id="ref-stumm_aquatic_1996">
 <p>Stumm, Werner, and James J. Morgan. 1996. <em>Aquatic Chemistry: Chemical Equilibria and Rates in Natural Waters</em>. 3rd ed. Environmental Science and Technology. Wiley-Interscience.</p>
@@ -1565,6 +1802,22 @@ doi = {10.4319/lo.2009.54.3.0666},
 url = {https://aslopubs.onlinelibrary.wiley.com/doi/abs/10.4319/lo.2009.54.3.0666},
 year = {2009}
 }
+
+@article{mulholland2008,
+	title = {Stream denitrification across biomes and its response to anthropogenic nitrate loading},
+	volume = {452},
+	issn = {0028-0836, 1476-4687},
+	url = {http://www.nature.com/articles/nature06686},
+	doi = {10.1038/nature06686},
+	language = {en},
+	number = {7184},
+	urldate = {2018-10-24},
+	journal = {Nature},
+	author = {Mulholland, Patrick J. and Helton, Ashley M. and Poole, Geoffrey C. and Hall, Robert O. and Hamilton, Stephen K. and Peterson, Bruce J. and Tank, Jennifer L. and Ashkenas, Linda R. and Cooper, Lee W. and Dahm, Clifford N. and Dodds, Walter K. and Findlay, Stuart E. G. and Gregory, Stanley V. and Grimm, Nancy B. and Johnson, Sherri L. and McDowell, William H. and Meyer, Judy L. and Valett, H. Maurice and Webster, J. R. and Arango, Clay P. and Beaulieu, Jake J. and Bernot, Melody J. and Burgin, Amy J. and Crenshaw, Chelsea L. and Johnson, Laura T. and Niederlehner, B. R. and O’Brien, Jonathan M. and Potter, Jody D. and Sheibley, Richard W. and Sobota, Daniel J. and Thomas, Suzanne M.},
+	year = {2008},
+	pages = {202--205}
+}
+
 </script>
 <!--/radix_placeholder_appendices-->
 <!--radix_placeholder_navigation_after_body-->
