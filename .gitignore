@@ -1,6 +1,8 @@
 # Private unpublished Marcarelli CAREER Nitrogen Fixation and Denitrification rates data
 /data/CAREER_RatesTable.csv
 /data/CAREER_SiteAttributes.csv
+/docs/data/CAREER_RatesTable.csv
+/docs/data/CAREER_SiteAttributes.csv
 
 # Ignore history and RProject files
 *.Rhistory
