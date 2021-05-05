@@ -49,7 +49,7 @@ library(caret)
 options(digits=3) # Change rounding to 3 digits
 
 # Colorblind-friendly palette developed by IBM, 2, 4 and 5 color version
-ibm2 <- c("#648FFF", "#DC267F")
+ibm2 <- c("#648FFF", "#ffb000")
 ibm4 <- c("#785EF0", "#DC267F", "#FE6100", "#FFB000")
 ibm5 <- c("#648FFF", "#785EF0", "#DC267F", "#FE6100", "#FFB000")
 ```
@@ -88,7 +88,7 @@ LINXII$vfden_cms <- (LINXII$Discharge_Ls / LINXII$Width_m) *
 ## This fix gives data that matches Figure 4 from Mulholland 2009 exactly
 LINXII$Denit_mgNm2hr <- (LINXII$vfden_cms * LINXII$NO3_ugNL) * 36
 
-sum(LINXII$Denit_mgNm2hr <= 0, na.rm = T) / length(LINXII$Denit_mgNm2hr)
+#sum(LINXII$Denit_mgNm2hr <= 0, na.rm = T) / length(LINXII$Denit_mgNm2hr)
 LINXII$Denit_mgNm2hr[LINXII$Denit_mgNm2hr <= 0] <- NA
 
 # Load metabolism
@@ -161,8 +161,7 @@ CAREERMetab$EnergyER_kCalm2hr <- convertER(CAREERMetab$ER_gO2m2d)
 CAREER <- read_csv(file = "data/CAREER_RatesTable.csv")
 CAREER$date <- mdy(CAREER$date)
 CAREER <- full_join(CAREER, CAREER_sites)
-sum(CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0, na.rm = T) /
-  length(CAREER$DenitUnamended_Mean_uMolN2Om2hr)
+#sum(CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0, na.rm = T) / length(CAREER$DenitUnamended_Mean_uMolN2Om2hr)
 CAREER$DenitUnamended_SD_uMolN2Om2hr[CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0] <- NA
 CAREER$DenitUnamended_Mean_uMolN2Om2hr[CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0] <- NA
 
@@ -330,52 +329,11 @@ grid.arrange(c,d, ncol = 2)
 #  theme(legend.position = "none")
 ```
 
-```{r plotNProcessRates, fig.cap="Denitrification rates measured on the dominant substrate (macrophyte, rock, sediment, or wood) at each study site. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=5, fig.width = 10, fig.pos="center"}
-# Boxplot of denitrification rates, by substrate
-a <- ggplot(data = CAREER, aes(y = DenitUnamended_Mean_mgNm2hr, 
-                               x = Substrate)) +
-  stat_boxplot(geom = "errorbar", width = 0.2) +
-  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
-  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, fill = "white") +
-  # Axis labels and scales
-  xlab(expression("Denitrification Rate (mg-N"~m^2~"hr"^{-1}*")")) +
-  labs(tag = "a") +
-  scale_fill_manual(values = ibm4) +
-  theme_classic() +
-  theme(axis.text = element_text(color = "black"), 
-        axis.text.y = element_text(size = 8),
-        panel.background = element_rect(color = "black"), 
-        legend.position = "none") 
-# Zoom in
-b <- ggplot(data = CAREER, aes(y = DenitUnamended_Mean_mgNm2hr, 
-                               x = Substrate)) +
-  stat_boxplot(geom = "errorbar", width = 0.2) +
-  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
-  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, 
-              fill = "white") +
-  # Axis labels and scales
-  ylab(expression("Denitrification Rate (mg-N"~m^2~"hr"^{-1}*")")) +
-  labs(tag = "b") +
-  # Zoom in
-  coord_cartesian(ylim = c(0, 7)) +
-  scale_fill_manual(values = ibm4) +
-  theme_classic() +
-  theme(axis.text = element_text(color = "black"), 
-        axis.text.y = element_text(size = 8),
-        panel.background = element_rect(color = "black"), 
-        legend.position = "none") 
-
-grid.arrange(grobs = list(a, b), layout_matrix = rbind(c(1,2),
-                                                       c(1,2),
-                                                       c(1,2),
-                                                       c(1,NA)))
-```
-
 # Methods  
 
-## Site description  
+## Sites and data  
 
-```{r plotMap, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+```{r plotMap, eval = F, fig.cap="Map of StreamPULSE (n = 12) and NEON (n = 13) study sites used in this analysis. Blue = StreamPULSE site, orange = NEON site. (would be neat to have a way to show years of metabolism record for each site on this map)", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 ##### Plot CAREER Site Map #####
 # Pull state map data
 world.map <- map_data("world")
@@ -409,7 +367,7 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-```{r plotMapLINXII, fig.cap="Map of Marcarelli CAREER (n = 7), and LINXII (n = 49) study sites used in this analysis. Pink = Marcarelli CAREER site, blue = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
+```{r plotMapLINXII, fig.cap="Map of Marcarelli Nationwide Survey (n = 7), and LINXII (n = 49) study sites used in this analysis. Yellow = Marcarelli Nationwide site, blue = LINXII site.", echo = FALSE, message = FALSE, warning = FALSE, fig.pos="center", fig.height=6, fig.width = 10}
 ##### Plot LINXII and CAREER Site Map #####
 # Merge sites_LINXII with CAREER_sites that we have modeled metabolism for
 # so far
@@ -449,16 +407,6 @@ ggplot() +
   guides(fill = FALSE)
 ```
 
-## Denitrification measurement
-
-## Metabolism modeling
-
-### Single-station
-
-### Two-station
-
-## LINX II dataset  
-
 Denitrification rates (as $k_{den}$, $m^{-1}$) were obtained from Mulholland et al. [-@mulholland2009] appendix. Rates were then converted to areal denitirification rates using conversion steps outlined in the methods of Mulholland et al. [-@mulholland2009], where $k_{denT}$ = denitrification rate per unit time ($d^{-1}$), $v$ = average water velocity ($cm ~ s^{-1}$), $v_{fden}$ = denitrification uptake velocity ($cm ~ s^{-1}$), $Q$ = discharge ($L ~ s^{-1}$), $w$ = average stream wetted width ($m$),$U_{den}$ = areal denitirification rate ($mg ~ m^{-2} ~ hr^{-1}$), $C$ = ambient nitrate concentration (ug-N $L^{-1}$).
 
 $$k_{denT} = k_{den} * v * 864$$
@@ -469,7 +417,7 @@ $$U_{den} = (v_{fden} * C) * 36$$
 
 Metabolism data (gross primary production, ecosystem respiration) for streams in the LINX II project was obtained from Bernot et al. [-@bernot2010] supplemental information.  
 
-## Conversion from Process Rate to Energy Production  
+## Energy Budget Calculation  
 
 Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to energy production rates (kCal $m^{-2} ~ hr^{-1}$) using Gibbs free energy ($\Delta G$) values and molar conversion factors from the balanced chemical reactions of each process.
 
@@ -479,29 +427,43 @@ Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to
 
 ![Conversion of aerobic respiration from oxygen production units of g-$O_2 ~ m^{-2} ~ day^{-1}$ to energy production units of kCal $m^{-2} ~ hr^{-1}$](images/AerobicResp.jpeg)
 
+## Predictive models
+
+
+
 # Results
 
-```{r DenitRatevsPercentTotalNRG, fig.cap="LINX II streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=5, fig.width=10, fig.pos="H"}
-a <- ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent)) +
+```{r LINXIIDenitRatevsPercentTotalNRG, fig.cap="LINX II streams with 'low' denitrification rate may still source a significant portion of their energy from denitrification, when total energy is considered as Gibbs free energy produced through denitrification plus Gibbs free energy produced through ecosystem respiration. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Blue points represent sites where the energy contribution from denitrification is greater than expected, red points represent sites where the energy contribution from denitrification is less than expected.", fig.height=6, fig.width=6, fig.pos="H"}
+ggplot(data = LINXII, aes(x = Denit_mgNm2hr, y = EnergyDenit_percent)) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
   # Label with site names
   #geom_text_repel(label = LINXII$SiteName, size = 3) + 
   # Add data points
   geom_point(size = 5, shape = 21) +
+  # Add colored data points
+  geom_point(data = subset(LINXII, EnergyDenit_percent > Denit_mgNm2hr),
+             fill = "#638DFF", size = 5, shape = 21) +
+  geom_point(data = subset(LINXII, EnergyDenit_percent < Denit_mgNm2hr),
+             fill = "#D90734", size = 5, shape = 21) +
   coord_cartesian(xlim = c(0, 10)) +
   # Theme adjustments
   theme_classic() +
   labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
-       y = expression("Percentage of total energy released via denitrification (%)"),
-       tag = "a") +
+       y = expression("Energy released from denitrification as a proportion of total energy budget (%)")) +
   theme(panel.border = element_rect(color = "black", fill = NA),
         axis.text = element_text(color = "black"),
         legend.position = c(0.2, 0.8),
         legend.background = element_rect(color = "black", fill = NA))
 
-b <- ggplot(data = CAREER, aes(x = DenitUnamended_Mean_mgNm2hr, 
-                          y = EnergyDenit_percent, 
-                          fill = Substrate)) +
+# Quartiles
+#quantile(LINXII$EnergyDenit_percent, na.rm = T)
+#quantile(CAREER$EnergyDenit_percent, na.rm = T)
+```
+
+```{r CAREERDenitRatevsPercentTotalNRG, fig.cap=" Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification.", fig.height=6, fig.width=6, fig.pos="H"}
+ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)), 
+       aes(x = DenitUnamended_Mean_mgNm2hr, y = EnergyDenit_percent, 
+           fill = Substrate)) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
   # Add data points
   geom_point(size = 5, aes(shape = Substrate)) +
@@ -509,53 +471,61 @@ b <- ggplot(data = CAREER, aes(x = DenitUnamended_Mean_mgNm2hr,
   # Theme adjustments
   theme_classic() +
   labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
-       y = expression("Percentage of total energy released via denitrification (%)"),
-       tag = "b") +
+       y = expression("Energy released from denitrification as a proportion of total energy budget (%)")) +
   scale_fill_manual(values = ibm4) +
   scale_shape_manual(values = c(21, 22, 23, 24)) +
   theme(panel.border = element_rect(color = "black", fill = NA),
         axis.text = element_text(color = "black"),
-        legend.position = c(0.15, 0.8),
+        legend.position = c(0.8, 0.15),
         legend.background = element_rect(color = "black", fill = NA))
-
-grid.arrange(a, b, nrow = 1)
-
-# Quartiles
-quantile(LINXII$EnergyDenit_percent, na.rm = T)
-quantile(CAREER$EnergyDenit_percent, na.rm = T)
 ```
 
-```{r predictive Denit %, eval = F}
-# (change this section if using a different dataframe)
-#dataFrameName <- LINXII_numeric %>% select (-EnergyER_percent, -Denit_mgNm2hr,
-#                                            -EnergyDenit_kCalm2hr) 
-dataFrameName <- CAREER_numeric %>% select (-EnergyER_percent,
-                                            -DenitUnamended_Mean_mgNm2hr,
-                                            -DenitUnamended_Mean_uMolN2Om2hr,
-                                            -EnergyDenit_kCalm2hr) 
-# Remove percent 
-# of total energy  budget from ER as this will be directly correlated with % 
-# of total from denitrification, remove denitrification rate 
+```{r plotCAREERRates, fig.cap="Denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=6, fig.width = 6, fig.pos="center"}
+#CAREER %>% group_by(Substrate) %>% summarise(median(DenitUnamended_Mean_mgNm2hr, na.rm = T))
 
-# Explore correlation between predictors and denitrification %
-featurePlot(x = dataFrameName, 
-            y = dataFrameName$EnergyDenit_percent, 
-            plot = "scatter", 
-            type = c("p", "smooth"),
-            span = .5)
+# Boxplot of denitrification rates, by substrate
+ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)),
+       aes(y = DenitUnamended_Mean_mgNm2hr, x = Substrate)) +
+  stat_boxplot(geom = "errorbar", width = 0.2) +
+  geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
+  geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, fill = "white") +
+  # Axis labels and scales
+  xlab(expression("Substrate type")) +
+  ylab(expression("Denitrification rate (mg-N"~m^2~"hr"^{-1}*")")) +
+  scale_fill_manual(values = ibm4) +
+  scale_x_discrete(limits = c("Sediment", "Macrophyte", "Wood", "Rock")) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        axis.text.y = element_text(size = 8),
+        panel.background = element_rect(color = "black"), 
+        legend.position = "none") 
+```
+
+```{r LINXIIPredictiveModel, eval = F}
+#### LINX II Predictive Model ####
+# Predictive model to determine importance of predictors for the denitrification
+# proportion of energy budget 
+dataFrameName <- LINXII_numeric %>% select (-EnergyER_percent,
+                                            -Denit_mgNm2hr,-EnergyDenit_kCalm2hr) 
+# Remove percent of total energy  budget from ER as this will be directly 
+# correlated with % of total from denitrification, remove denitrification rate 
 
 # Pre-process data
-preproc <- preProcess(dataFrameName)
+preproc <- preProcess(dataFrameName, method = c("center", "scale", 
+                                                "knnImpute", "nzv"),
+                      k = 5, freqCut = 95/5)
 transfor <- predict(preproc, newdata = dataFrameName)
 # Split the data into predictors and response 
-response <- dataFrameName$EnergyDenit_percent
-predictors <- dataFrameName %>% select(-EnergyDenit_percent)
+response <- transfor$EnergyDenit_percent
+predictors <- transfor %>% select(-EnergyDenit_percent)
 
 # Check for highly correlated predictors and remove highly correlated 
 # predictors using a cutoff value of 85%
 highCorr <-findCorrelation(cor(predictors), cutoff = 0.85)
-names(predictors[highCorr])
+message("Omitted highly correlated predictors above cutoff value of 0.85: ", paste(names(predictors[highCorr]), collapse = ", "))
 predictors <- predictors[-highCorr]
+
+# 28 observations, 28 variables, n = p
 
 # Split data into training and testing
 set.seed(999)
@@ -567,24 +537,43 @@ response_train <- response[trainIndex]
 response_test <- response[-trainIndex]
 
 # Set up a 10 fold repeated CV for all models
-fitControl <- trainControl(method = "repeatedcv", number = 3,
+fitControl <- trainControl(method = "repeatedcv", number = 10,
                            ## repeated 3 times for testing
-                           repeats = 3)
+                           repeats = 10)
 
-# Train Neural network, MARS, SVM, and KNN models
-## Neural network
-nnetGrid <- expand.grid(.decay = c(0, 0.01, .1),
-                        .size = c(1:30),
-                        .bag = FALSE)
+# Linear regression: partial least squares, elastic net
+# Nonlinear regression: neural net, mars, svm, knn
+# Regression trees: single regression trees
+
+## pls model
 set.seed(999)
-nnetModel <- train(x = predictors_train, y = response_train, method = "avNNet",
-                  tuneGrid = nnetGrid, linout = TRUE, trace = FALSE,
-                  MaxNWts = 30 * (ncol(predictors_train) + 1) + 30 + 1,
-                  maxit = 500)
-plot(nnetModel, main = "Neural Net")
+plsModel <- train(x = predictors_train, y = response_train, method = "pls", 
+                   trControl = fitControl, tuneLength = 20)
+plot(plsModel)
+plsPred <- predict(plsModel, newdata = predictors_test)
+plsResults <- postResample(pred = plsPred, obs = response_test)
+
+## Elastic net
+enetGrid <- expand.grid(.lambda = c(0.001, 0.1, 0.5), 
+                        .fraction = seq(0.05, 1, length = 20))
+set.seed(999)
+enetTune <- train(x = predictors_train, y = response_train, method = "enet", 
+                  tuneGrid = enetGrid, trControl = fitControl)
+plot(enetTune, main = "Elastic Net Regression")
 # Evaluate test set performance
-nnetPred <- predict(nnetModel, predictors_test)
-postResample(pred = nnetPred, obs = response_test)
+enetPredic <- predict(enetTune, predictors_test)
+enetResults <- postResample(pred = enetPredic, obs = response_test)
+
+## neural network
+nnetGrid <- expand.grid(.decay = c(0, 0.01), .size = c(1:20),.bag = FALSE)
+set.seed(999)
+nnetModel <- train(x = predictors_train, y = response_train, method = "avNNet", 
+                   tuneGrid = nnetGrid,
+                   trControl = fitControl)
+plot(nnetModel, main = "neural net")
+# Evaluate test set performance
+nnetPred <- predict(nnetModel, newdata = predictors_test)
+nnetResults <- postResample(pred = nnetPred, obs = response_test)
 
 ## MARS
 set.seed(999)
@@ -594,7 +583,7 @@ marsModel <- train(x = predictors_train, y = response_train, method = "earth",
 plot(marsModel, main = "MARS")
 # Evaluate test set performance
 marsPred <- predict(marsModel, newdata = predictors_test)
-postResample(pred = marsPred, obs = response_test)
+marsResults <- postResample(pred = marsPred, obs = response_test)
 
 ## SVM
 library(kernlab)
@@ -605,7 +594,112 @@ svmRTuned <- train(x = predictors_train, y = response_train, method = "svmRadial
 plot(svmRTuned, main = "Radial SVM")
 # Evaluate test set performance
 svmRPred <- predict(svmRTuned, newdata = predictors_test)
-postResample(pred = svmRPred, obs = response_test)
+svmRResults <- postResample(pred = svmRPred, obs = response_test)
+
+## KNN
+set.seed(999)
+knnTune <- train(x = predictors_train, y = response_train, method = "knn", 
+                 tuneGrid = data.frame(.k = 1:10), trControl = fitControl)
+plot(knnTune, main = "KNN")
+# Evaluate test set performance
+knnPred <- predict(knnTune, newdata = predictors_test)
+knnResults <- postResample(pred = knnPred, obs = response_test)
+
+## random forest
+library(randomForest)
+set.seed(999)
+forestTune <- train(x = predictors_train, y = response_train, 
+                        method = "cforest", 
+                        trControl = fitControl)
+plot(forestTune)
+# Evaluate test set performance
+forestPred <- predict(forestTune, newdata = predictors_test)
+forestResults <- postResample(pred = forestPred, obs = response_test)
+
+## boosted trees
+gbmGrid <- expand.grid(interaction.depth = seq(1, 7, by = 2), 
+                       n.trees = seq(10, 200, by = 50), 
+                       shrinkage = c(0.01, 0.1), n.minobsinnode = 2)
+boostTune <- train(x = predictors_train, y = response_train, 
+                        method = "gbm", tuneGrid = gbmGrid, verbose = F,
+                        trControl = fitControl)
+plot(boostTune)
+boostPred <- predict(boostTune, newdata = predictors_test)
+boostResults <- postResample(pred = boostPred, obs = response_test)
+
+# Display fit results
+data.frame(plsResults, enetResults, nnetResults, marsResults, svmRResults, knnResults, forestResults, boostResults)
+
+# pls partial least squares
+# ridge regression
+# elastic net
+
+#defaultSummary(data.frame(obs = testResponse, pred = enetPredic))
+# f. which predictors are most important?
+plot(varImp(enetTune), 5, 
+     main = "Importance of Predictors according to Linear Elastic Net")
+
+# Explore predictor importance from best fit model (lowest RMSE)
+plot(varImp(marsModel), 2, 
+     main = "Importance of Predictors")
+plot(marsModel$finalModel)
+```
+
+```{r CAREERPredictiveModel,eval=F}
+dataFrameName <- subset(CAREER_numeric, !is.na(EnergyTot_kCalm2hr)) %>% 
+  select (-EnergyER_percent,-DenitUnamended_Mean_mgNm2hr,
+          -DenitUnamended_Mean_uMolN2Om2hr,-EnergyDenit_kCalm2hr) 
+
+# Pre-process data
+preproc <- preProcess(dataFrameName, method = c("center", "scale", 
+                                                "knnImpute", "nzv"),
+                      k = 5, freqCut = 95/5)
+transfor <- predict(preproc, newdata = dataFrameName)
+# Split the data into predictors and response 
+response <- transfor$EnergyDenit_percent
+predictors <- transfor %>% select(-EnergyDenit_percent)
+
+# Check for highly correlated predictors and remove highly correlated 
+# predictors using a cutoff value of 85%
+highCorr <-findCorrelation(cor(predictors), cutoff = 0.85)
+message("Omitted highly correlated predictors above cutoff value of 0.85: ", paste(names(predictors[highCorr]), collapse = ", "))
+predictors <- predictors[-highCorr]
+
+# 17 observations, 24 variables, n < p
+
+# Split data into training and testing using 10 fold cross validation
+set.seed(999)
+trainIndex <- createFolds(dataFrameName$EnergyDenit_percent, 
+                               k = 10, list = FALSE)
+predictors_train <- predictors[trainIndex,]
+predictors_test <- predictors[-trainIndex,]
+response_train <- response[trainIndex]
+response_test <- response[-trainIndex]
+
+# Set up a 10 fold repeated CV for all models
+fitControl <- trainControl(method = "repeatedcv", number = 10, repeats = 10)
+
+# Train MARS, SVM, KNN, and elastic net models
+## MARS
+set.seed(999)
+marsModel <- train(x = predictors_train, y = response_train, method = "earth", 
+                   tuneGrid = expand.grid(.degree = 1:2, .nprune = 2:15),
+                   trControl = fitControl)
+plot(marsModel, main = "MARS")
+# Evaluate test set performance
+marsPred <- predict(marsModel, newdata = predictors_test)
+marsResults <- postResample(pred = marsPred, obs = response_test)
+
+## SVM
+library(kernlab)
+# Choosing to evaluate a radial SVM
+set.seed(999)
+svmRTuned <- train(x = predictors_train, y = response_train, method = "svmRadial",
+                   tuneLength = 7, trControl = fitControl)
+plot(svmRTuned, main = "Radial SVM")
+# Evaluate test set performance
+svmRPred <- predict(svmRTuned, newdata = predictors_test)
+svmRResults <- postResample(pred = svmRPred, obs = response_test)
 
 ## KNN
 set.seed(999)
@@ -614,7 +708,7 @@ knnTune <- train(x = predictors_train, y = response_train, method = "knn",
 plot(knnTune, main = "KNN")
 # Evaluate test set performance
 knnPred <- predict(knnTune, newdata = predictors_test)
-postResample(pred = knnPred, obs = response_test)
+knnResults <- postResample(pred = knnPred, obs = response_test)
 
 ## Elastic net
 enetGrid <- expand.grid(.lambda = c(1E-6, 0.00001, 0.0001, 0.001, 0.1, 0.5, 1), 
@@ -625,30 +719,34 @@ enetTune <- train(x = predictors_train, y = response_train, method = "enet",
 plot(enetTune, main = "Elastic Net Regression")
 # Evaluate test set performance
 enetPredic <- predict(enetTune, predictors_test)
-postResample(pred = enetPredic, obs = response_test)
+enetResults <- postResample(pred = enetPredic, obs = response_test)
 
+# Display fit results
+data.frame(marsResults, svmRResults, knnResults, enetResults)
 
 #defaultSummary(data.frame(obs = testResponse, pred = enetPredic))
 # f. which predictors are most important?
-plot(varImp(enetTune), 10, 
+plot(varImp(enetTune), 5, 
      main = "Importance of Predictors according to Linear Elastic Net")
 
 # Explore predictor importance from best fit model (lowest RMSE)
 plot(varImp(marsModel), 5, 
      main = "Importance of Predictors")
+
+plot(marsModel$finalModel)
 ```
 
 ```{r PCA, fig.cap="Plots showing the first two principle components from PCA analysis of the assembled LINX II dataset. Plot A shows the first two principle components with points labeled with site names. Plot B shows the first two principle components with labeled eigenvectors overlaid.", fig.height=8, fig.width=5, fig.pos="H", eval = F}
 # Compute PCA, center and scale the data
-pcaModel <- prcomp(CAREER_numeric, center = TRUE, scale. = TRUE) 
+pcaModel <- prcomp(predictors, center = TRUE, scale. = TRUE) 
 # Predict on data
-LINXII_PCA <- predict(pcaModel, LINXII_numeric)
+LINXII_PCA <- predict(pcaModel, predictors)
 
 # Plot first 2 PCA scores in ggplot using ggfortify
 a <- 
   autoplot(pcaModel, size = 2) +
   # Label each point with the site
-  geom_text_repel(label = na.omit(LINXII)$State, size = 2.5) + 
+  #geom_text_repel(label = na.omit(LINXII)$State, size = 2.5) + 
   # Adjust theme
   theme_classic() +
   labs(tag = "A") +
