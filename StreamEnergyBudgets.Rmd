@@ -456,27 +456,35 @@ Process rates (ex. denitrification in mg-N $m^{-2} ~ hr^{-1}$) were converted to
 
 ### Aerobic respiration  
 
-$$
-Energy~released~from~ER = ER~rate \times \Delta G_{0}'\times e^{-}~in~balanced~reaction
-$$
+<center>
+
+Energy released from ER = ER rate $\times ~ \Delta G_{0}' ~ \times ~ e^{-}$ in balanced reaction  
+
+</center>
 
 Where ER rate is in $g~O_{2}~m^{-2}~d^{-1}$, and Gibbs free energy or $\Delta G_{0}'$ is in $kCal~e^{-1}$. Applying unit conversions, where there are 32 $g~O_{2}~mol~O_{2}^{-1}$, 2 mol O per mol $O_{2}$, 1 mol $O_{2}$ per balanced reaction, and 24 hours per day, this becomes energy released from ER in kCal $m^{-2} ~ hr^{-1}$:
 
-$$
-Energy~released~from~ER = ER~rate \times 29.9 \times 4 \div 32 \times 2 \div 24
-$$
+<center>
+
+Energy released from ER = ER rate $\times$ 29.9 $\times$ 4 $\div$ 32 $\times$ 2 $\div$ 24  
+
+</center>
 
 ### Denitrification
 
-$$
-Energy~released~from~denitrification = Denitrification~rate \times \Delta G_{0}' \times e^{-}~in~balanced~reaction
-$$
+<center>
+
+Energy released from denitrification = Denitrification rate $\times ~ \Delta G_{0}' ~ \times ~ e^{-}$ in balanced reaction  
+
+</center>
 
 Where denitrification rate is in $mg~N~m^{-2}~hr^{-1}$, and $\Delta G_{0}'$ is in $kCal~e^{-1}$. Applying unit conversions, where there are 1000 mg per g, 14 $g~N~mol{-1}$, and 2 mol N per balanced reaction, this becomes energy released from denitrification in kCal $m^{-2} ~ hr^{-1}$:
 
-$$
-Energy~released~from~denitrification = Denitrification~rate \times 28.4 \times 10 \div 1000 \div 14 \div 2
-$$
+<center>
+
+Energy released from denitrification = Denitrification rate $\times$ 28.4 $\times$ 10 $\div$ 1000 $\div$ 14 $\div$ 2  
+
+</center>
 
 ## Predictive modeling approach  
 
