@@ -2,7 +2,7 @@
 title: "Are anaerobic energy-generation pathways significant contributors to stream energy budgets?"
 description: "2021 SFS Annual Meeting: Original Talk"
 author: 
-  - name: "Michelle Catherine Kelly"
+  - name: "Michelle C. Kelly"
     url: https://michelleckelly.github.io
     affiliation: Michigan Tech
   - name: "Kevin Nevorski"
@@ -781,4 +781,8 @@ grid.arrange(a, b, nrow = 2)
 
 We thank C. Allison, A. Copley, J. Cornell, E. Coscarelli, A. Eckersell, H. Harris, D. Larson, J. Ortiz, J. Paris, H. Roose, R. Schipper, and R. Van Goethem for field and laboratory assistance. This research was funded by the National Science Foundation Grant DEB 14-51919 to Amy M. Marcarelli.
 
-Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 
+Funding for the Lotic Intersite Nitrogen eXperiment II (LINX-II) project was provided by the National Science Foundation Division of Environmental Biology (NSF Grant DEB-0111410). Raw data collected by LINX-II is available from the Environmental Data Initiative repository here: https://doi.org/10.6073/pasta/eac34b6c1cfb0268dd76ef68a7a90bfc. Whole-stream denitrification rates measured using 15-N tracers are from from Mulholland et al. 2009 Supplemental, https://www.doi.org/10.4319/lo.2009.54.3.0666. Modeled metabolism data obtained from Bernot et al. 2010 Supplemental, https://www.doi.org/10.1111/j.1365-2427.2010.02422.x.
+
+Additional data sets were provided by the StreamPULSE Network, with funding provided by the National Science Foundation Macrosystems program (NSF Grant EF 14-42439). https://data.streamPULSE.org 
+
+The National Ecological Observatory Network is a program sponsored by the National Science Foundation and operated under cooperative agreement by Battelle Memorial Institute. This material is based in part upon work supported by the National Science Foundation through the NEON Program. 
