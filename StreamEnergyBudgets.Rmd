@@ -181,9 +181,13 @@ CAREERMetab$EnergyER_kCalm2hr <- convertER(CAREERMetab$ER_gO2m2d)
 CAREER <- read_csv(file = "data/CAREER_RatesTable.csv")
 CAREER$date <- mdy(CAREER$date)
 CAREER <- full_join(CAREER, CAREER_sites)
+# Remove non positive rates
 #sum(CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0, na.rm = T) / length(CAREER$DenitUnamended_Mean_uMolN2Om2hr)
 CAREER$DenitUnamended_SD_uMolN2Om2hr[CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0] <- NA
 CAREER$DenitUnamended_Mean_uMolN2Om2hr[CAREER$DenitUnamended_Mean_uMolN2Om2hr <= 0] <- NA
+#sum(CAREER$DenitAmended_Mean_uMolN2Om2hr <= 0, na.rm = T) / length(CAREER$DenitAmended_Mean_uMolN2Om2hr)
+CAREER$DenitAmended_SD_uMolN2Om2hr[CAREER$DenitAmended_Mean_uMolN2Om2hr <= 0] <- NA
+CAREER$DenitAmended_Mean_uMolN2Om2hr[CAREER$DenitAmended_Mean_uMolN2Om2hr <= 0] <- NA
 
 # Group rock cobble and rock flock into rock category
 CAREER$Substrate <- recode(CAREER$Substrate, "Rock Flock" = "Rock", 
@@ -200,14 +204,21 @@ CAREER <-
             by = c("date", "StreamPULSE_SiteID" = "site")) 
 
 ### Calculate denitrification energy, energy budgets  #########################
-CAREER$DenitUnamended_Mean_mgNm2hr <- 
-  CAREER$DenitUnamended_Mean_uMolN2Om2hr * 2 / 10^3 * 14
-CAREER$EnergyDenit_kCalm2hr <- 
-  convertDenit(CAREER$DenitUnamended_Mean_mgNm2hr)
+# Unamended
+#CAREER$DenitUnamended_Mean_mgNm2hr <- 
+#  CAREER$DenitUnamended_Mean_uMolN2Om2hr * 2 / 10^3 * 14
+#CAREER$EnergyDenit_kCalm2hr <- 
+#  convertDenit(CAREER$DenitUnamended_Mean_mgNm2hr)
+# Amended
+CAREER$DenitAmended_Mean_mgNm2hr <- 
+  CAREER$DenitAmended_Mean_uMolN2Om2hr * 2 / 10^3 * 14
+CAREER$EnergyDenitAmended_kCalm2hr <- 
+  convertDenit(CAREER$DenitAmended_Mean_mgNm2hr)
+# Totals
 CAREER$EnergyTot_kCalm2hr <- 
-  CAREER$EnergyDenit_kCalm2hr + CAREER$EnergyER_kCalm2hr
+  CAREER$EnergyDenitAmended_kCalm2hr + CAREER$EnergyER_kCalm2hr
 CAREER$EnergyDenit_percent <- 
-  CAREER$EnergyDenit_kCalm2hr / CAREER$EnergyTot_kCalm2hr * 100
+  CAREER$EnergyDenitAmended_kCalm2hr / CAREER$EnergyTot_kCalm2hr * 100
 CAREER$EnergyER_percent <- 
   CAREER$EnergyER_kCalm2hr / CAREER$EnergyTot_kCalm2hr * 100
 
@@ -446,7 +457,7 @@ Modeled **metabolism** (gross primary production, ecosystem respiration) for str
 
 ### Marcarelli nationwide denitrification and N fixation survey  
 
-Denitrification was measured on individual stream substrates using **acetylene inhibition** assays.  
+Denitrification was measured on individual stream substrates using **amended acetylene inhibition** assays.  
 
 Modeled **metabolism** obtained from StreamPULSE repository, https://data.streamPULSE.org.  
 
@@ -700,19 +711,27 @@ plot(varImp(marsModel), 2, col = "black")
 
 * **Substrate with highest rates** of denitrification may be **contributing the least** amount to total energy budget.
 
-```{r CAREERDenitRatevsPercentTotalNRG, fig.cap="Substrates with the highest rates of denitrification may be contributing the least amount to the total energy budget. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Data is from a subset of 7 streams from the Marcarelli Nationwide Survey (total n = 21).", fig.height=6, fig.width=6, fig.pos="H"}
-ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)), 
-       aes(x = DenitUnamended_Mean_mgNm2hr, y = EnergyDenit_percent, 
+```{r CAREERDenitRatevsPercentTotalNRG, fig.cap="Substrates with the highest rates of denitrification may be contributing the least amount to the total energy budget. Dashed line has a slope of 1, representing a denitrification rate proportional to the fraction of total energy released from denitrification. Energy released from denitrification is based on amended denitrification rates. Data is from a subset of 7 streams from the Marcarelli Nationwide Survey (total n = 21).", fig.height=6, fig.width=6, fig.pos="H"}
+ggplot(data = subset(CAREER, !is.na(DenitAmended_Mean_mgNm2hr)), 
+       aes(x = DenitAmended_Mean_mgNm2hr, y = EnergyDenit_percent, 
            fill = Substrate)) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
   # Add data points
   geom_point(size = 5, aes(shape = Substrate)) +
-  coord_cartesian(xlim = c(0, 10)) +
+  coord_cartesian(xlim = c(0, 25)) +
+  # Label with site names
+  #geom_text_repel(label = subset(CAREER, 
+  #                               !is.na(DenitAmended_Mean_mgNm2hr))$SiteName, 
+  #                size = 3) + 
+  #geom_text_repel(label = subset(CAREER, 
+  #                               !is.na(DenitAmended_Mean_mgNm2hr))$NO2NO3_ugL, 
+  #                size = 3) + 
   # Theme adjustments
   theme_classic() +
   labs(x = expression("Denitrification rate (mg-N" ~ m^{-2} ~ hr^{-1} * ")"), 
        y = expression("Energy released from denitrification as a proportion of total energy budget (%)")) +
   scale_fill_manual(values = ibm4) +
+  scale_color_manual(values = ibm4) +
   scale_shape_manual(values = c(21, 22, 23, 24)) +
   theme(panel.border = element_rect(color = "black", fill = NA),
         axis.text = element_text(color = "black"),
@@ -720,12 +739,12 @@ ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)),
         legend.background = element_rect(color = "black", fill = NA))
 ```
 
-```{r plotCAREERRates, fig.cap="Unamended denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=6, fig.width = 6, fig.pos="center"}
+```{r plotCAREERRates, fig.cap="Amended denitrification rates (n = 71) measured on multiple substrates (macrophyte, rock, sediment, wood) present at each study site as part of the Marcarelli Nationwide Survey. Boxplot error bars extend from the first quartile minus 1.5 times the interquartile range to the third quartile plus 1.5 times the interquartile range, middle bar denotes median.", echo = FALSE, message = FALSE, warning = FALSE, fig.height=6, fig.width = 6, fig.pos="center"}
 #CAREER %>% group_by(Substrate) %>% summarise(median(DenitUnamended_Mean_mgNm2hr, na.rm = T))
 
 # Boxplot of denitrification rates, by substrate
-ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)),
-       aes(y = DenitUnamended_Mean_mgNm2hr, x = Substrate)) +
+ggplot(data = subset(CAREER, !is.na(DenitAmended_Mean_mgNm2hr)),
+       aes(y = DenitAmended_Mean_mgNm2hr, x = Substrate)) +
   stat_boxplot(geom = "errorbar", width = 0.2) +
   geom_boxplot(aes(fill = factor(Substrate)), outlier.shape = NA, width = 0.7) +
   geom_jitter(color = "black", size = 2, width = 0.2, shape = 21, fill = "white") +
@@ -733,7 +752,7 @@ ggplot(data = subset(CAREER, !is.na(DenitUnamended_Mean_mgNm2hr)),
   xlab(expression("Substrate type")) +
   ylab(expression("Denitrification rate (mg-N"~m^2~"hr"^{-1}*")")) +
   scale_fill_manual(values = ibm4) +
-  scale_x_discrete(limits = c("Sediment", "Macrophyte", "Wood", "Rock")) +
+  scale_x_discrete(limits = c("Macrophyte", "Sediment", "Wood", "Rock")) +
   theme_classic() +
   theme(axis.text = element_text(color = "black"), 
         axis.text.y = element_text(size = 8),
