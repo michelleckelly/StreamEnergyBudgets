@@ -12,6 +12,8 @@ navbar:
   right:
     - text: "Analysis"
       href: StreamEnergyBudgets.html
+    - text: "Slides (PDF)"
+      href: talk_slides/SFS2021_Presentation.pdf
     - text: "Source Code"
       href: https://github.com/michelleckelly/StreamEnergyBudgets/blob/master/StreamEnergyBudgets.Rmd
     - icon: fab fa-github
