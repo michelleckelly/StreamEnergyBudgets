@@ -14,8 +14,9 @@
 *Icon
 /data/Icon
 
-# Ignore Rmd default cache directory
+# Ignore Rmd cache directories
 /cache/
+/StreamEnergyBudgets_cache/*
 
 # Ignore any temp files that are created by Rmd
 *.utf9.md
