@@ -21,7 +21,7 @@ output:
     self_contained: false
 ---
 
-This webpage houses an HTML version of the talk "Are anaerobic energy-generation pathways significant contributors to stream energy budgets?", presented at the 2021 annual meeting of the Society for Freshwater Science (SFS). Source code behind the analysis is linked above.
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/mWbGofwV9Rk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Acknowledgments {.appendix}
 
